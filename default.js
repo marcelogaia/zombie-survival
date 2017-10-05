@@ -14,6 +14,8 @@ var keyPress = {
     Space   : false,
 };
 
+var gameInterval;
+
 // Canvas/Stage properties
 function Stage (bounds, tilemap) {
     var self = this;
@@ -57,19 +59,28 @@ function Stage (bounds, tilemap) {
 function Player () {
     var self = this;
 
+    self.hp = 100;
     self.x = 0;
     self.y = 0;
     self.speed = 3;
     
     self.draw = function() {
         self.move();
-        iCtx.clearRect(0,0,stage.width,stage.height);
+
+        // Drawing the player
         iCtx.beginPath();
         iCtx.fillStyle = "white";
         iCtx.fillRect(stage.xMid + self.x - 10, stage.yMid + self.y - 10, 20, 20);  
+
+        // Drawing the HP bar
+        iCtx.fillStyle = "red";
+        iCtx.fillRect(stage.xMid + self.x - 15, stage.yMid + self.y - 25, 30, 3);
+        iCtx.fillStyle = "green";
+        iCtx.fillRect(stage.xMid + self.x - 15, stage.yMid + self.y - 25, self.hp/100*30, 3);
     };
 
     self.move = function() {
+        if(self.hp <= 0) self.speed = 0;
         let actualSpeed = self.speed;
 
         // Fair diagonal speed =)
@@ -108,18 +119,69 @@ function Player () {
 // Enemies
 function Enemy (x,y) {
     var self = this;
-    self.x = 0;
-    self.y = 0;
+    self.x = x;
+    self.y = y;
     self.speed = 1.5;
+    self.pDirection = 0;
+    self.dmg = 10;
+
+    let currSpeed = 0;
+
     self.move = function() {
+        // m = (y2 - y1) / (x2 - x1)
+        // angle = arctan(m) = 
+        pDirection = Math.atan2((player.y - self.y),(player.x - self.x));
         
+        // If not touching the player, walk towards it.
+        if(!self.hitTest(player)/* && player.hp > 0*/) {
+            currSpeed = self.speed;
+            for(let i in enemies){
+                let en = enemies[i];
+                if(self !== en) {
+                    if(self.hitTest(en)) {
+                        currSpeed = 0;
+
+                        console.log("Bump it! (Awesome collision system!");
+                        eDirection = Math.atan2((en.y - self.y),(en.x - self.x));
+
+                        en.x += Math.cos(eDirection) * 2;
+                        en.y += Math.sin(eDirection) * 2;
+                    }
+                }
+            }
+            if(currSpeed === 0) {
+                setTimeout(function(){
+                    currSpeed = self.speed;
+                },500);
+            }
+            
+            self.x += Math.cos(pDirection) * currSpeed;
+            self.y += Math.sin(pDirection) * currSpeed;   
+        } else {
+            currSpeed = 0;
+            setTimeout(function(){currSpeed = self.speed;},600);
+            self.hit();
+        }
     };
     self.draw = function() {
         self.move();
-        iCtx.clearRect(0,0,stage.width,stage.height);
         iCtx.beginPath();
         iCtx.fillStyle = "white";
-        iCtx.fillRect(stage.xMid + self.x - 10, stage.yMid + self.y - 10, 20, 20);  
+        iCtx.arc(stage.xMid + self.x, stage.yMid + self.y, 10, 0, Math.PI*2);  
+        iCtx.fill();
+    };
+
+    self.hitTest = function(obj) {
+        return !(Math.abs(obj.y - self.y)>20 || Math.abs(obj.x - self.x)>20);
+    };
+
+    self.hit = function() {
+        if(player.hp > 0) {
+            player.x += Math.cos(pDirection) * 15;
+            player.y += Math.sin(pDirection) * 15;
+            
+            player.hp = self.dmg > player.hp ? 0 : player.hp - self.dmg;
+        }
     };
 }
 
@@ -169,22 +231,39 @@ function addTheListeners() {
 
 function gameLoop() {
     "use strict";
-
+    
+    iCtx.clearRect(0,0,stage.width,stage.height);
     stage.draw();
     player.draw();
+
+    for(let i in enemies) {
+        enemies[i].draw();
+    }
 }
 
 function init() {
     "use strict";
+
+    clearInterval(gameInterval);
     
     window.stage = new Stage(true,"");
     window.player  = new Player();
+    window.enemies = new Array();
+
+    let spawn = setInterval(function(){
+        enemies.push(new Enemy(
+            (Math.random()*stage.width/2) - stage.xMid,
+            (Math.random()*stage.height) - stage.yMid
+            )
+        );
+    },3000);
 
     stage.resize();
     addTheListeners();
 
     // Game Loop
-    setInterval(gameLoop, 33);
+    console.log(gameInterval);
+    gameInterval = setInterval(gameLoop, 33);
 }
 
 init();
