@@ -14,7 +14,11 @@ var keyPress = {
     Space   : false,
 };
 
+// Game properties
+var score = 0;
+var level = 1;
 var gameInterval;
+var spawnInterval;
 
 // Canvas/Stage properties
 function Stage (bounds, tilemap) {
@@ -63,6 +67,7 @@ function Player () {
     self.x = 0;
     self.y = 0;
     self.speed = 3;
+    self.direction = Math.PI/2;
     
     self.draw = function() {
         self.move();
@@ -80,7 +85,13 @@ function Player () {
     };
 
     self.move = function() {
-        if(self.hp <= 0) self.speed = 0;
+        if(self.hp <= 0) {
+            self.speed = 0;
+
+            // @TODO: Solve this better;
+            clearInterval(gameInterval);
+            clearInterval(spawnInterval);
+        }
         let actualSpeed = self.speed;
 
         // Fair diagonal speed =)
@@ -118,12 +129,14 @@ function Player () {
 
 // Enemies
 function Enemy (x,y) {
-    var self = this;
-    self.x = x;
-    self.y = y;
-    self.speed = 1.5;
+    var self        = this;
+    self.x          = x;
+    self.y          = y;
+    self.speed      = 1.5;
     self.pDirection = 0;
-    self.dmg = 10;
+    self.dmg        = 10;
+    self.score      = 100;
+    self.hp         = 100;
 
     let currSpeed = 0;
 
@@ -142,6 +155,7 @@ function Enemy (x,y) {
                         currSpeed = 0;
 
                         console.log("Bump it! (Awesome collision system!");
+                        self.hp -= 25;
                         eDirection = Math.atan2((en.y - self.y),(en.x - self.x));
 
                         en.x += Math.cos(eDirection) * 2;
@@ -164,6 +178,9 @@ function Enemy (x,y) {
         }
     };
     self.draw = function() {
+        if(self.hp <= 0) {
+            self.die();
+        }
         self.move();
         iCtx.beginPath();
         iCtx.fillStyle = "white";
@@ -173,6 +190,12 @@ function Enemy (x,y) {
 
     self.hitTest = function(obj) {
         return !(Math.abs(obj.y - self.y)>20 || Math.abs(obj.x - self.x)>20);
+    };
+
+    self.die = function() {
+        let index = enemies.indexOf(self);
+        enemies.splice(index, 1);
+        score += self.score;
     };
 
     self.hit = function() {
@@ -185,9 +208,15 @@ function Enemy (x,y) {
     };
 }
 
-// Game properties
-var score = 0;
-var level = 1;
+function HUD() {
+    var self = this;
+    self.draw = function() {
+
+        iCtx.font="20px Georgia";
+        iCtx.fillStyle = "white";
+        iCtx.fillText(score,10,20);
+    };
+}
 
 function addTheListeners() {
     window.addEventListener("resize", stage.resize);
@@ -235,6 +264,7 @@ function gameLoop() {
     iCtx.clearRect(0,0,stage.width,stage.height);
     stage.draw();
     player.draw();
+    hud.draw();
 
     for(let i in enemies) {
         enemies[i].draw();
@@ -245,25 +275,35 @@ function init() {
     "use strict";
 
     clearInterval(gameInterval);
+    clearInterval(spawnInterval);
     
     window.stage = new Stage(true,"");
     window.player  = new Player();
-    window.enemies = new Array();
+    window.enemies = [];
+    window.hud = new HUD();
 
-    let spawn = setInterval(function(){
-        enemies.push(new Enemy(
-            (Math.random()*stage.width/2) - stage.xMid,
-            (Math.random()*stage.height) - stage.yMid
+    spawnInterval = setInterval(function(){
+        let validArea = stage.width - 
+        enemies.push(
+            new Enemy(
+                (Math.random()*stage.width/2) - stage.xMid,
+                (Math.random()*stage.height) - stage.yMid
             )
         );
-    },3000);
+    },400);
 
     stage.resize();
     addTheListeners();
 
     // Game Loop
-    console.log(gameInterval);
     gameInterval = setInterval(gameLoop, 33);
+
+    var speedInterval = setInterval(function(){
+        player.speed *= 1.1;
+        for(let i in enemies) {
+            enemies[i].speed *= 1.1;
+        }
+    },5000);
 }
 
 init();
