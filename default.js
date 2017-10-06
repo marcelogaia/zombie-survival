@@ -12,6 +12,13 @@ var keyPress = {
     Up      : false,
     Down    : false,
     Space   : false,
+    Click   : false,
+};
+
+var mouse = {
+    x : 0,
+    y : 0,
+    Click : false
 };
 
 // Game properties
@@ -20,6 +27,14 @@ var level = 1;
 var gameInterval;
 var spawnInterval;
 var speedInterval;
+
+
+// SFX
+var gunshotSnd;
+var reloadSnd;
+var outOfAmmoSnd;
+var playerDiedSnd;
+var gotHitSnd = [];
 
 // Canvas/Stage properties
 function Stage (bounds, tilemap) {
@@ -68,8 +83,19 @@ function Player () {
     self.hp = 100;
     self.x = 0;
     self.y = 0;
-    self.speed = 3;
+    self.speed = 2;
     self.direction = Math.PI/2;
+
+    gotHitSnd.push(new Audio());
+    gotHitSnd.push(new Audio());
+    gotHitSnd.push(new Audio());
+
+    gotHitSnd[0].src = "gothit1.wav";
+    gotHitSnd[1].src = "gothit2.wav";
+    gotHitSnd[2].src = "gothit3.wav";
+
+    playerDiedSnd = new Audio();
+    playerDiedSnd.src = "dead.wav";
     
     self.draw = function() {
         self.move();
@@ -88,11 +114,7 @@ function Player () {
 
     self.move = function() {
         if(self.hp <= 0) {
-            self.speed = 0;
-
-            // @TODO: Solve this better;
-            clearInterval(gameInterval);
-            clearInterval(spawnInterval);
+            self.die();
         }
         let actualSpeed = self.speed;
 
@@ -127,6 +149,19 @@ function Player () {
                 
         }
     };
+
+    self.die = function () {
+
+        self.speed = 0;
+
+        // @TODO: Solve this better;
+        clearInterval(gameInterval);
+        clearInterval(spawnInterval);
+
+        playerDiedSnd.currentTime = 0;
+        playerDiedSnd.play();
+
+    }
 }
 
 // Enemies
@@ -139,6 +174,7 @@ function Enemy (x,y,hp) {
     self.dmg = 10;
     self.hp = hp;
     self.currSpeed = 0;
+    self.score = 100;
 
     self.move = function() {
         // m = (y2 - y1) / (x2 - x1)
@@ -169,7 +205,7 @@ function Enemy (x,y,hp) {
             }
             
             self.x += Math.cos(pDirection) * self.currSpeed;
-            self.y += Math.sin(pDirection) * self.currSpeed;   
+            self.y += Math.sin(pDirection) * self.currSpeed; 
         } else {
             currSpeed = 0;
             setTimeout(function(){currSpeed = self.speed;},600);
@@ -177,10 +213,10 @@ function Enemy (x,y,hp) {
         }
     };
     self.draw = function() {
-        if(self.hp <= 0) self = null;
+        if(self.hp <= 0) self.die();
         self.move();
         iCtx.beginPath();
-        iCtx.fillStyle = "white";
+        iCtx.fillStyle = "#D77";
         iCtx.arc(stage.xMid + self.x, stage.yMid + self.y, 10, 0, Math.PI*2);  
         iCtx.fill();
     };
@@ -195,7 +231,17 @@ function Enemy (x,y,hp) {
             player.y += Math.sin(pDirection) * 15;
             
             player.hp = self.dmg > player.hp ? 0 : player.hp - self.dmg;
+
+            let randSnd = Math.floor(Math.random() * 3);
+            gotHitSnd[randSnd].currentTime = 0;
+            gotHitSnd[randSnd].play();
         }
+    }; 
+
+    self.die = function() {
+        let index = enemies.indexOf(self);
+        enemies.splice(index,1);
+        score += self.score;
     };
 }
 
@@ -209,32 +255,145 @@ function HUD() {
     };
 }
 
+function Bullet(x,y,range,direction, speed) {
+    var self = this;
+    self.x = x;
+    self.y = y;
+    self.range = range;
+    self.direction = direction;
+    self.speed = speed;
+    self.dmg = weapon.dmg;
+
+    self.move = function() {
+        self.x += Math.cos(self.direction) * self.speed;
+        self.y += Math.sin(self.direction) * self.speed;
+
+        if(self.x < -stage.xMid || self.x > stage.xMid || self.y < -stage.yMid || self.y > stage.yMid) {
+            self.destroy();
+        }
+    };
+
+    self.draw = function() {
+
+        iCtx.beginPath();
+        iCtx.save();
+        iCtx.translate(stage.xMid,stage.yMid);
+        iCtx.strokeStyle = "white";
+        iCtx.moveTo(self.x, self.y);
+
+        let hit = self.hit();
+
+        if(hit) {
+            iCtx.lineTo(hit.x,hit.y);
+
+        }
+        else {
+            iCtx.lineTo(
+                self.x + (Math.cos(self.direction) * weapon.bulletSpeed),
+                self.y + (Math.sin(self.direction) * weapon.bulletSpeed)
+            );
+        }
+
+        iCtx.stroke();
+        iCtx.restore();
+
+        if(hit) self.destroy();
+
+        self.move();
+    };
+
+    self.hit = function () {
+        let hit = false;
+
+        for(let i = 0; i < self.range; i++) {
+            let point = {
+                x: self.x + (Math.cos(self.direction) * i), 
+                y: self.y + (Math.sin(self.direction) * i)
+            };
+
+            for(let j in enemies){
+                if(enemies[j].hitTest(point)) {
+                    hit = point;
+                    enemies[j].hp -= self.dmg;
+                    self.dmg = 0;
+
+                    console.log(enemies[j].hp);
+                }
+            }
+        }
+
+        return hit;
+    };
+
+    self.destroy = function() {
+        for(let i in bullets){
+            if(self === bullets[i])
+                bullets.splice(i,1);
+
+        }
+        //bullets.splice("index", 1);
+    };
+
+}
+
 function Weapon(name) {
     var self = this;
     self.name = name;
     self.range = 150;
+    self.bulletSpeed = 120; // 50:Crossbow, 35:Rocket, 120: Pistol
     self.ammo = Infinity;
     self.capacity = 15;
     self.inMag = 15;
-    self.shotDelay = 0.7;
+    self.shotDelay = 0.5; // 2.5: Crossbox, 1.5: Rocket, 1:Shotgun, 0.5: Pistol
     self.reloadTime = 2.0;
+    self.dmg = 40;
+    self.shotSound = "shot.flac";
+    self.reloadSound = "reload.wav";
+    self.outOfAmmoSound = "outofammo.wav";
+
     self.isReloading = false;
     self.isShooting = false;
+    
+    gunshotSnd = new Audio();
+    reloadSnd = new Audio();
+    outOfAmmoSnd = new Audio();
+    
+    gunshotSnd.src = self.shotSound;
+    reloadSnd.src = self.reloadSound;
+    outOfAmmoSnd.src = self.outOfAmmoSound;
 
-
-    self.shoot = function() {
-        if(!isShooting) {
-            isShooting = true;
-            setTimeout(function(){
-                self.ammo -= 1;
-
-
-
-            },self.shotDelay*1000);
+    self.shoot = function(x,y) {
+        if(self.inMag <= 0) {
+            self.reload();
         }
+
+        if(!self.isShooting && !self.isReloading) {
+            self.isShooting = true;
+            let direction = Math.atan2((y - stage.yMid - player.y),(x - stage.xMid - player.x));
+
+            self.inMag -= 1;
+            bullets.push(new Bullet(player.x,player.y,self.range,direction,self.bulletSpeed));
+
+            setTimeout(function(){
+                self.isShooting = false;
+            },self.shotDelay*1000);
+
+            if(!gunshotSnd.paused) gunshotSnd.currentTime = 0;
+            
+            gunshotSnd.play();
+        }
+
     };
 
     self.reload = function() {
+        if(self.capacity > 0) {
+            reloadSnd.play();
+        } else {
+            outOfAmmoSnd.play();
+            console.log("Out of ammo!");
+            return;
+        }
+        console.log("Reloading...");
         if(!self.isReloading) {
             // Start reloading animation
             self.isReloading = true;
@@ -281,9 +440,9 @@ function addTheListeners() {
         if (evt.key === "ArrowDown" || evt.key.toLowerCase() === "s") {
             keyPress.Down = true;
         }
-        if (evt.key.toLowerCase() === " ") {
-            keyPress.Space = true;
-        }
+        // if (evt.key.toLowerCase() === " ") {
+        //     keyPress.Space = true;
+        // }
     });
 
     document.addEventListener("keyup", function (evt) {
@@ -299,10 +458,23 @@ function addTheListeners() {
         if (evt.key === "ArrowDown" || evt.key.toLowerCase() === "s") {
             keyPress.Down = false;
         }
-        if (evt.key === " ") {
-            keyPress.Space = false;
-        }
+        // if (evt.key === " ") {
+        //     keyPress.Space = false;
+        // }
 
+    });
+
+    document.addEventListener("mousedown", function(evt) {
+        mouse.Click = true;
+    });
+
+    document.addEventListener("mouseup", function(evt) {
+        mouse.Click = false;
+    });
+
+    document.addEventListener("mousemove", function(evt){
+        mouse.x = evt.clientX;
+        mouse.y = evt.clientY;
     });
 }
 
@@ -319,9 +491,16 @@ function gameLoop() {
         enemies[i].draw();
     }
 
+    for(let i in bullets) {
+        bullets[i].draw();
+    }
 
     if(player.speed > 10){
         clearInterval(speedInterval);
+    }
+
+    if(mouse.Click) {
+        weapon.shoot(mouse.x,mouse.y);
     }
 }
 
@@ -336,16 +515,18 @@ function init() {
     window.enemies = [];
     window.hud = new HUD();
     window.weapon = new Weapon("Pistol");
+    window.bullets = [];
 
     spawnInterval = setInterval(function(){
         let validArea = stage.width - 
         enemies.push(
             new Enemy(
                 (Math.random()*stage.width/2) - stage.xMid,
-                (Math.random()*stage.height) - stage.yMid
+                (Math.random()*stage.height) - stage.yMid,
+                100
             )
         );
-    }, 1500);
+    }, 5000);
 
     stage.resize();
     addTheListeners();
@@ -353,14 +534,14 @@ function init() {
     // Game Loop
     gameInterval = setInterval(gameLoop, 23);
 
-    speedInterval = setInterval(function(){
-        player.speed *= 1.1;
-        for(let i in enemies) {
-            enemies[i].speed *= 1.1;
-            // Grow overtime? Not anymore
-            // enemies[i].size *= 1.1;
-        }
-    },3000);
+    // speedInterval = setInterval(function(){
+    //     player.speed *= 1.01;
+    //     for(let i in enemies) {
+    //         enemies[i].speed *= 1.2;
+    //         // Grow overtime? Not anymore
+    //         // enemies[i].size *= 1.1;
+    //     }
+    // },3000);
 }
 
 init();
