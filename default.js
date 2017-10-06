@@ -19,10 +19,12 @@ var score = 0;
 var level = 1;
 var gameInterval;
 var spawnInterval;
+var speedInterval;
 
 // Canvas/Stage properties
 function Stage (bounds, tilemap) {
     var self = this;
+
     self.defaultSize = 0;
     self.width = 0;
     self.height = 0;
@@ -74,14 +76,14 @@ function Player () {
 
         // Drawing the player
         iCtx.beginPath();
-        iCtx.fillStyle = "white";
+        iCtx.fillStyle = "#EFE";
         iCtx.fillRect(stage.xMid + self.x - 10, stage.yMid + self.y - 10, 20, 20);  
 
         // Drawing the HP bar
         iCtx.fillStyle = "red";
-        iCtx.fillRect(stage.xMid + self.x - 15, stage.yMid + self.y - 25, 30, 3);
+        iCtx.fillRect(stage.xMid + self.x - 15, stage.yMid + self.y - 20, 30, 3);
         iCtx.fillStyle = "green";
-        iCtx.fillRect(stage.xMid + self.x - 15, stage.yMid + self.y - 25, self.hp/100*30, 3);
+        iCtx.fillRect(stage.xMid + self.x - 15, stage.yMid + self.y - 20, self.hp/100*30, 3);
     };
 
     self.move = function() {
@@ -128,17 +130,15 @@ function Player () {
 }
 
 // Enemies
-function Enemy (x,y) {
-    var self        = this;
-    self.x          = x;
-    self.y          = y;
-    self.speed      = 1.5;
+function Enemy (x,y,hp) {
+    var self = this;
+    self.x = x;
+    self.y = y;
+    self.speed = 1.5;
     self.pDirection = 0;
-    self.dmg        = 10;
-    self.score      = 100;
-    self.hp         = 100;
-
-    let currSpeed = 0;
+    self.dmg = 10;
+    self.hp = hp;
+    self.currSpeed = 0;
 
     self.move = function() {
         // m = (y2 - y1) / (x2 - x1)
@@ -152,10 +152,9 @@ function Enemy (x,y) {
                 let en = enemies[i];
                 if(self !== en) {
                     if(self.hitTest(en)) {
-                        currSpeed = 0;
+                        self.currSpeed = 0;
 
                         console.log("Bump it! (Awesome collision system!");
-                        self.hp -= 25;
                         eDirection = Math.atan2((en.y - self.y),(en.x - self.x));
 
                         en.x += Math.cos(eDirection) * 2;
@@ -163,14 +162,14 @@ function Enemy (x,y) {
                     }
                 }
             }
-            if(currSpeed === 0) {
+            if(self.currSpeed === 0) {
                 setTimeout(function(){
-                    currSpeed = self.speed;
+                    self.currSpeed = self.speed;
                 },500);
             }
             
-            self.x += Math.cos(pDirection) * currSpeed;
-            self.y += Math.sin(pDirection) * currSpeed;   
+            self.x += Math.cos(pDirection) * self.currSpeed;
+            self.y += Math.sin(pDirection) * self.currSpeed;   
         } else {
             currSpeed = 0;
             setTimeout(function(){currSpeed = self.speed;},600);
@@ -178,9 +177,7 @@ function Enemy (x,y) {
         }
     };
     self.draw = function() {
-        if(self.hp <= 0) {
-            self.die();
-        }
+        if(self.hp <= 0) self = null;
         self.move();
         iCtx.beginPath();
         iCtx.fillStyle = "white";
@@ -190,12 +187,6 @@ function Enemy (x,y) {
 
     self.hitTest = function(obj) {
         return !(Math.abs(obj.y - self.y)>20 || Math.abs(obj.x - self.x)>20);
-    };
-
-    self.die = function() {
-        let index = enemies.indexOf(self);
-        enemies.splice(index, 1);
-        score += self.score;
     };
 
     self.hit = function() {
@@ -218,43 +209,100 @@ function HUD() {
     };
 }
 
+function Weapon(name) {
+    var self = this;
+    self.name = name;
+    self.range = 150;
+    self.ammo = Infinity;
+    self.capacity = 15;
+    self.inMag = 15;
+    self.shotDelay = 0.7;
+    self.reloadTime = 2.0;
+    self.isReloading = false;
+    self.isShooting = false;
+
+
+    self.shoot = function() {
+        if(!isShooting) {
+            isShooting = true;
+            setTimeout(function(){
+                self.ammo -= 1;
+
+
+
+            },self.shotDelay*1000);
+        }
+    };
+
+    self.reload = function() {
+        if(!self.isReloading) {
+            // Start reloading animation
+            self.isReloading = true;
+            setTimeout(
+                function(){
+                    self.ammo -= self.capacity - self.inMag;
+                    self.inMag = self.capacity;
+                    self.isReloading = false;
+                },
+                self.reloadTime * 1000
+            );
+        }
+    };
+
+    self.draw = function() {
+        iCtx.font="14px Georgia";
+        iCtx.fillStyle = "white";
+        iCtx.textAlign = "center";
+        iCtx.fillText(weapon.name ,stage.xMid + player.x, stage.yMid + player.y + 25);
+
+        iCtx.textAlign = 'right';
+        iCtx.fillText(self.inMag + "/" ,stage.xMid + player.x, stage.yMid + player.y + 45);
+        
+        iCtx.textAlign = 'left';
+        iCtx.font="22px Georgia";
+        iCtx.fillText("∞" ,stage.xMid + player.x, stage.yMid + player.y + 50);
+
+    };
+}
+
 function addTheListeners() {
     window.addEventListener("resize", stage.resize);
 
     document.addEventListener("keydown", function (evt) {
-        if (evt.key === "ArrowRight") {
+        if (evt.key === "ArrowRight" || evt.key.toLowerCase() === "d") {
             keyPress.Right = true;
         }
-        if (evt.key === "ArrowLeft") {
+        if (evt.key === "ArrowLeft" || evt.key.toLowerCase() === "a") {
             keyPress.Left = true;
         }
-        if (evt.key === "ArrowUp") {
+        if (evt.key === "ArrowUp" || evt.key.toLowerCase() === "w") {
             keyPress.Up = true;
         }
-        if (evt.key === "ArrowDown") {
+        if (evt.key === "ArrowDown" || evt.key.toLowerCase() === "s") {
             keyPress.Down = true;
         }
-        if (evt.key === " ") {
+        if (evt.key.toLowerCase() === " ") {
             keyPress.Space = true;
         }
     });
 
     document.addEventListener("keyup", function (evt) {
-        if (evt.key === "ArrowRight") {
+        if (evt.key === "ArrowRight" || evt.key.toLowerCase() === "d") {
             keyPress.Right = false;
         }
-        if (evt.key === "ArrowLeft") {
+        if (evt.key === "ArrowLeft" || evt.key.toLowerCase() === "a") {
             keyPress.Left = false;
         }
-        if (evt.key === "ArrowUp") {
+        if (evt.key === "ArrowUp" || evt.key.toLowerCase() === "w") {
             keyPress.Up = false;
         }
-        if (evt.key === "ArrowDown") {
+        if (evt.key === "ArrowDown" || evt.key.toLowerCase() === "s") {
             keyPress.Down = false;
         }
         if (evt.key === " ") {
             keyPress.Space = false;
         }
+
     });
 }
 
@@ -265,9 +313,15 @@ function gameLoop() {
     stage.draw();
     player.draw();
     hud.draw();
+    weapon.draw();
 
     for(let i in enemies) {
         enemies[i].draw();
+    }
+
+
+    if(player.speed > 10){
+        clearInterval(speedInterval);
     }
 }
 
@@ -281,6 +335,7 @@ function init() {
     window.player  = new Player();
     window.enemies = [];
     window.hud = new HUD();
+    window.weapon = new Weapon("Pistol");
 
     spawnInterval = setInterval(function(){
         let validArea = stage.width - 
@@ -290,20 +345,22 @@ function init() {
                 (Math.random()*stage.height) - stage.yMid
             )
         );
-    },400);
+    }, 1500);
 
     stage.resize();
     addTheListeners();
 
     // Game Loop
-    gameInterval = setInterval(gameLoop, 33);
+    gameInterval = setInterval(gameLoop, 23);
 
-    var speedInterval = setInterval(function(){
+    speedInterval = setInterval(function(){
         player.speed *= 1.1;
         for(let i in enemies) {
             enemies[i].speed *= 1.1;
+            // Grow overtime? Not anymore
+            // enemies[i].size *= 1.1;
         }
-    },5000);
+    },3000);
 }
 
 init();
