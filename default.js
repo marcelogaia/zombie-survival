@@ -161,7 +161,7 @@ function Player () {
         playerDiedSnd.currentTime = 0;
         playerDiedSnd.play();
 
-    }
+    };
 }
 
 // Enemies
@@ -175,6 +175,7 @@ function Enemy (x,y,hp) {
     self.hp = hp;
     self.currSpeed = 0;
     self.score = 100;
+    self.size = 10;
 
     self.move = function() {
         // m = (y2 - y1) / (x2 - x1)
@@ -190,7 +191,7 @@ function Enemy (x,y,hp) {
                     if(self.hitTest(en)) {
                         self.currSpeed = 0;
 
-                        console.log("Bump it! (Awesome collision system!");
+                        //console.log("Bump it! (Awesome collision system!");
                         eDirection = Math.atan2((en.y - self.y),(en.x - self.x));
 
                         en.x += Math.cos(eDirection) * 2;
@@ -217,12 +218,16 @@ function Enemy (x,y,hp) {
         self.move();
         iCtx.beginPath();
         iCtx.fillStyle = "#D77";
-        iCtx.arc(stage.xMid + self.x, stage.yMid + self.y, 10, 0, Math.PI*2);  
+        iCtx.arc(stage.xMid + self.x, stage.yMid + self.y, self.size, 0, Math.PI*2);  
         iCtx.fill();
     };
 
     self.hitTest = function(obj) {
         return !(Math.abs(obj.y - self.y)>20 || Math.abs(obj.x - self.x)>20);
+    };
+
+    self.wasHit = function(obj) {
+        return !(Math.abs(obj.y - self.y)>10 || Math.abs(obj.x - self.x)>10);
     };
 
     self.hit = function() {
@@ -255,7 +260,7 @@ function HUD() {
     };
 }
 
-function Bullet(x,y,range,direction, speed) {
+function Bullet(x,y,range,direction, speed, impact) {
     var self = this;
     self.x = x;
     self.y = y;
@@ -263,6 +268,7 @@ function Bullet(x,y,range,direction, speed) {
     self.direction = direction;
     self.speed = speed;
     self.dmg = weapon.dmg;
+    self.impact = impact;
 
     self.move = function() {
         self.x += Math.cos(self.direction) * self.speed;
@@ -278,14 +284,13 @@ function Bullet(x,y,range,direction, speed) {
         iCtx.beginPath();
         iCtx.save();
         iCtx.translate(stage.xMid,stage.yMid);
-        iCtx.strokeStyle = "white";
+        iCtx.strokeStyle = "#DDA";
         iCtx.moveTo(self.x, self.y);
 
         let hit = self.hit();
 
         if(hit) {
             iCtx.lineTo(hit.x,hit.y);
-
         }
         else {
             iCtx.lineTo(
@@ -305,22 +310,39 @@ function Bullet(x,y,range,direction, speed) {
     self.hit = function () {
         let hit = false;
 
-        for(let i = 0; i < self.range; i++) {
+        sCtx.save();
+        sCtx.translate(stage.xMid,stage.yMid);
+
+        eachPixel:
+        for(let i = 0; i < self.speed; i++) {
+
             let point = {
                 x: self.x + (Math.cos(self.direction) * i), 
                 y: self.y + (Math.sin(self.direction) * i)
             };
 
+            eachEnemies:
             for(let j in enemies){
-                if(enemies[j].hitTest(point)) {
-                    hit = point;
-                    enemies[j].hp -= self.dmg;
-                    self.dmg = 0;
+                if(enemies[j].wasHit(point)) {
+                    // @TODO: Draw with sprite;
+                    // <a href='http://www.freepik.com/free-vector/red-ink-splashes_1050260.htm'>Designed by Freepik</a>
+                    sCtx.beginPath();
+                    sCtx.fillStyle = "red";
+                    sCtx.arc(point.x,point.y,10,0,2*Math.PI);
+                    sCtx.fill();
 
-                    console.log(enemies[j].hp);
+                    hit = point;
+                    self.destroy();
+                    enemies[j].hp -= self.dmg;
+
+                    enemies[j].x += (Math.cos(self.direction) * self.impact);
+                    enemies[j].y += (Math.sin(self.direction) * self.impact);
+                    break eachPixel;
                 }
             }
         }
+
+        sCtx.restore();
 
         return hit;
     };
@@ -331,7 +353,6 @@ function Bullet(x,y,range,direction, speed) {
                 bullets.splice(i,1);
 
         }
-        //bullets.splice("index", 1);
     };
 
 }
@@ -344,9 +365,12 @@ function Weapon(name) {
     self.ammo = Infinity;
     self.capacity = 15;
     self.inMag = 15;
-    self.shotDelay = 0.5; // 2.5: Crossbox, 1.5: Rocket, 1:Shotgun, 0.5: Pistol
+    self.shotDelay = 0.5; // 2.5: Crossbow, 1.5: Rocket, 1:Shotgun, 0.5: Pistol
     self.reloadTime = 2.0;
     self.dmg = 40;
+    self.impact = 15;
+    self.accuracy = 40; // 5: Wide Shotgun, 25: Pistol, 45: Crossbow, 100: Sniper
+    self.bulletPerShot = 5 // 1: everything, 5: Shotgun
     self.shotSound = "shot.flac";
     self.reloadSound = "reload.wav";
     self.outOfAmmoSound = "outofammo.wav";
@@ -369,10 +393,16 @@ function Weapon(name) {
 
         if(!self.isShooting && !self.isReloading) {
             self.isShooting = true;
-            let direction = Math.atan2((y - stage.yMid - player.y),(x - stage.xMid - player.x));
 
+            for(let i =0;i<self.bulletPerShot;i++){
+
+                let direction = Math.atan2((y - stage.yMid - player.y),(x - stage.xMid - player.x));
+                let widthRange = 100/(self.accuracy*Math.PI*6);
+                direction += -widthRange/2 + Math.random()*widthRange;
+
+                bullets.push(new Bullet(player.x,player.y,self.range,direction,self.bulletSpeed,self.impact));
+            }
             self.inMag -= 1;
-            bullets.push(new Bullet(player.x,player.y,self.range,direction,self.bulletSpeed));
 
             setTimeout(function(){
                 self.isShooting = false;
@@ -440,9 +470,6 @@ function addTheListeners() {
         if (evt.key === "ArrowDown" || evt.key.toLowerCase() === "s") {
             keyPress.Down = true;
         }
-        // if (evt.key.toLowerCase() === " ") {
-        //     keyPress.Space = true;
-        // }
     });
 
     document.addEventListener("keyup", function (evt) {
@@ -458,10 +485,6 @@ function addTheListeners() {
         if (evt.key === "ArrowDown" || evt.key.toLowerCase() === "s") {
             keyPress.Down = false;
         }
-        // if (evt.key === " ") {
-        //     keyPress.Space = false;
-        // }
-
     });
 
     document.addEventListener("mousedown", function(evt) {
@@ -482,7 +505,6 @@ function gameLoop() {
     "use strict";
     
     iCtx.clearRect(0,0,stage.width,stage.height);
-    stage.draw();
     player.draw();
     hud.draw();
     weapon.draw();
@@ -517,22 +539,33 @@ function init() {
     window.weapon = new Weapon("Pistol");
     window.bullets = [];
 
+
+
+
+    let s = true;
     spawnInterval = setInterval(function(){
+        if(s){
+
         let validArea = stage.width - 
         enemies.push(
             new Enemy(
-                (Math.random()*stage.width/2) - stage.xMid,
+                (Math.random()*stage.width) - stage.xMid,
                 (Math.random()*stage.height) - stage.yMid,
                 100
             )
         );
-    }, 5000);
+        s = true;
+        }
+    }, 300);
 
     stage.resize();
+
+    // Draw once;
+    stage.draw();
     addTheListeners();
 
     // Game Loop
-    gameInterval = setInterval(gameLoop, 23);
+    gameInterval = setInterval(gameLoop, 33);
 
     // speedInterval = setInterval(function(){
     //     player.speed *= 1.01;
