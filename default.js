@@ -22,11 +22,6 @@ var mouse = {
 };
 
 var weaponNo = [];
-weaponNo["1"] = "Pistol";
-weaponNo["2"] = "Uzi";
-weaponNo["3"] = "Shotgun";
-weaponNo["4"] = "MP16";
-weaponNo["5"] = "RPG";
 
 // Game properties
 var score = 0;
@@ -521,7 +516,9 @@ function addTheListeners() {
 
         // Weapon Choice 
         if(evt.key.match("[0-9]")) {
-            weapon = new Weapon(weaponNo[evt.key]);
+
+            if(weaponNo[evt.key] != undefined)
+                weapon = weaponNo[evt.key];
         }
     });
 
@@ -594,7 +591,14 @@ function init() {
     window.bullets = [];
 
     window.weaponsData = weaponsJSON.weapons[0];
-    window.weapon = new Weapon("Pistol");
+
+    weaponNo["1"] = new Weapon("Pistol");
+    weaponNo["2"] = new Weapon("Uzi");
+    weaponNo["3"] = new Weapon("Shotgun");
+    weaponNo["4"] = new Weapon("MP16");
+    weaponNo["5"] = new Weapon("RPG");
+
+    window.weapon = weaponNo["1"];
 
     let shouldSpawn = true;
     let spawnCount = 0;

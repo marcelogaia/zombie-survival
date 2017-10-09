@@ -6,7 +6,7 @@ weaponsJSON = {"weapons": [{
 		"ammo": -1,
 		"capacity": 15,
 		"inMag": 15,
-		"shotDelay": 0.5,
+		"shotDelay": 0.4,
 		"reloadTime": 2.0,
 		"dmg": 40,
 		"impact": 15,
