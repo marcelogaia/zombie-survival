@@ -21,13 +21,20 @@ var mouse = {
     Click : false
 };
 
+var weaponNo = [];
+weaponNo["1"] = "Pistol";
+weaponNo["2"] = "Uzi";
+weaponNo["3"] = "Shotgun";
+weaponNo["4"] = "MP16";
+weaponNo["5"] = "RPG";
+
 // Game properties
 var score = 0;
 var level = 1;
 var gameInterval;
 var spawnInterval;
 var speedInterval;
-
+var weaponsData;
 
 // SFX
 var gunshotSnd;
@@ -243,6 +250,10 @@ function Enemy (x,y,hp) {
         }
     }; 
 
+    self.spawn = function () {
+
+    };
+
     self.die = function() {
         let index = enemies.indexOf(self);
         enemies.splice(index,1);
@@ -260,6 +271,7 @@ function HUD() {
     };
 }
 
+// Bullet Instance
 function Bullet(x,y,range,direction, speed, impact) {
     var self = this;
     self.x = x;
@@ -354,26 +366,20 @@ function Bullet(x,y,range,direction, speed, impact) {
 
         }
     };
-
 }
 
+// Weapon Instance
 function Weapon(name) {
     var self = this;
-    self.name = name;
-    self.range = 150;
-    self.bulletSpeed = 120; // 50:Crossbow, 35:Rocket, 120: Pistol
-    self.ammo = Infinity;
-    self.capacity = 15;
-    self.inMag = 15;
-    self.shotDelay = 0.5; // 2.5: Crossbow, 1.5: Rocket, 1:Shotgun, 0.5: Pistol
-    self.reloadTime = 2.0;
-    self.dmg = 40;
-    self.impact = 15;
-    self.accuracy = 40; // 5: Wide Shotgun, 25: Pistol, 45: Crossbow, 100: Sniper
-    self.bulletPerShot = 5 // 1: everything, 5: Shotgun
-    self.shotSound = "shot.flac";
-    self.reloadSound = "reload.wav";
-    self.outOfAmmoSound = "outofammo.wav";
+
+    for(let i in weaponsData[name]) {
+        let w = weaponsData[name][i];
+        self[i] = w;
+    }
+
+    // @TODO: Implement AoE for explosives
+
+    if(self.ammo == -1) self.ammo = Infinity;
 
     self.isReloading = false;
     self.isShooting = false;
@@ -389,6 +395,7 @@ function Weapon(name) {
     self.shoot = function(x,y) {
         if(self.inMag <= 0) {
             self.reload();
+            return;
         }
 
         if(!self.isShooting && !self.isReloading) {
@@ -416,21 +423,29 @@ function Weapon(name) {
     };
 
     self.reload = function() {
-        if(self.capacity > 0) {
+        // Full mag
+        if(self.inMag == self.capacity) return;
+
+        if(self.ammo > 0) {
             reloadSnd.play();
         } else {
             outOfAmmoSnd.play();
-            console.log("Out of ammo!");
+            setTimeout(function(){weapon = new Weapon("Pistol");},500);
             return;
         }
-        console.log("Reloading...");
+        
         if(!self.isReloading) {
-            // Start reloading animation
+            // @TODO: Start reloading animation
             self.isReloading = true;
             setTimeout(
                 function(){
-                    self.ammo -= self.capacity - self.inMag;
-                    self.inMag = self.capacity;
+                    if(self.ammo < (self.capacity - self.inMag)) {
+                        self.inMag += self.ammo;
+                        self.ammo = 0;
+                    } else {
+                        self.ammo -= self.capacity - self.inMag;
+                        self.inMag = self.capacity;
+                    }
                     self.isReloading = false;
                 },
                 self.reloadTime * 1000
@@ -447,13 +462,43 @@ function Weapon(name) {
         iCtx.textAlign = 'right';
         iCtx.fillText(self.inMag + "/" ,stage.xMid + player.x, stage.yMid + player.y + 45);
         
-        iCtx.textAlign = 'left';
-        iCtx.font="22px Georgia";
-        iCtx.fillText("∞" ,stage.xMid + player.x, stage.yMid + player.y + 50);
+        if(self.ammo == Infinity) {   
+            iCtx.textAlign = 'left';
+            iCtx.font="22px Georgia";
+            iCtx.fillText("∞" ,stage.xMid + player.x, stage.yMid + player.y + 50);
+        } else {
+            iCtx.textAlign = 'left';
+            iCtx.fillText(self.ammo ,stage.xMid + player.x, stage.yMid + player.y + 45);
+        }
 
     };
 }
 
+// Simple sprite drawing function
+// Based on: http://www.williammalone.com/articles/create-html5-canvas-javascript-sprite-animation/
+function sprite(options) {
+    var self = [];
+    for(let i in options) {
+        self[i] = option[i];
+    }
+
+    self.draw = function () {
+        let ctx = self.context;
+        ctx.drawImage(
+            self.image,
+            0,
+            0,
+            self.width,
+            self.height,
+            0,
+            0,
+            self.width,
+            self.height
+        );
+    };
+}
+
+// Creating the listeners for inputs
 function addTheListeners() {
     window.addEventListener("resize", stage.resize);
 
@@ -469,6 +514,14 @@ function addTheListeners() {
         }
         if (evt.key === "ArrowDown" || evt.key.toLowerCase() === "s") {
             keyPress.Down = true;
+        }
+        if (evt.key.toLowerCase() === "r") {
+            weapon.reload();
+        }
+
+        // Weapon Choice 
+        if(evt.key.match("[0-9]")) {
+            weapon = new Weapon(weaponNo[evt.key]);
         }
     });
 
@@ -501,6 +554,7 @@ function addTheListeners() {
     });
 }
 
+// The Gameloop
 function gameLoop() {
     "use strict";
     
@@ -526,6 +580,7 @@ function gameLoop() {
     }
 }
 
+// Initializing the game
 function init() {
     "use strict";
 
@@ -536,25 +591,47 @@ function init() {
     window.player  = new Player();
     window.enemies = [];
     window.hud = new HUD();
-    window.weapon = new Weapon("Pistol");
     window.bullets = [];
 
+    window.weaponsData = weaponsJSON.weapons[0];
+    window.weapon = new Weapon("Pistol");
 
+    let shouldSpawn = true;
+    let spawnCount = 0;
+    let stageCount = 1;
+    let countDown = 10;
+    let counting = false;
 
-
-    let s = true;
     spawnInterval = setInterval(function(){
-        if(s){
+        if(shouldSpawn){
+            enemies.push(
+                new Enemy(
+                    (Math.random()*stage.width) - stage.xMid,
+                    (Math.random()*stage.height) - stage.yMid,
+                    100
+                )
+            );
+            spawnCount += 1;
+            
+            if(spawnCount % 10 == 0) {
+                shouldSpawn = false;
+            }
+        } else {
+            if(enemies.length == 0) {
+                if(!counting) {
+                    counting = true;
+                    console.log(countDown);
+                    setTimeout(function(){
+                        countDown -= 1;
+                        counting = false;
 
-        let validArea = stage.width - 
-        enemies.push(
-            new Enemy(
-                (Math.random()*stage.width) - stage.xMid,
-                (Math.random()*stage.height) - stage.yMid,
-                100
-            )
-        );
-        s = true;
+                        if(countDown == 0) {
+                            shouldSpawn = true;
+                            countDown = 10;
+                        }
+                    },1000);
+                }
+            }
         }
     }, 300);
 
