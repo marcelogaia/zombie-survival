@@ -374,7 +374,6 @@ function Bullet(x,y,range,direction, speed, impact) {
         for(let i in bullets){
             if(self === bullets[i])
                 bullets.splice(i,1);
-
         }
     };
 }
