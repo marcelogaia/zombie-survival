@@ -38,6 +38,10 @@ var outOfAmmoSnd;
 var playerDiedSnd;
 var gotHitSnd = [];
 
+// Sprite Maps
+var bloodImage = new Image();
+bloodImage.src = './blood_sprite.png';
+
 // Canvas/Stage properties
 function Stage (bounds, tilemap) {
     var self = this;
@@ -69,7 +73,12 @@ function Stage (bounds, tilemap) {
 
     self.draw = function() {
         // Draw background
-        sCtx.fillStyle = "black";
+        var testGrad = sCtx.createLinearGradient(0,0,0,self.height);
+        testGrad.addColorStop("0","yellow");
+        testGrad.addColorStop("0.3","green");
+        testGrad.addColorStop("0.7","gray");
+        testGrad.addColorStop("1","black");
+        sCtx.fillStyle = testGrad;
         sCtx.fillRect(0, 0, stage.width, stage.height);
 
         // @TODO: Draw tilemap
@@ -331,12 +340,19 @@ function Bullet(x,y,range,direction, speed, impact) {
             eachEnemies:
             for(let j in enemies){
                 if(enemies[j].wasHit(point)) {
-                    // @TODO: Draw with sprite;
-                    // <a href='http://www.freepik.com/free-vector/red-ink-splashes_1050260.htm'>Designed by Freepik</a>
-                    sCtx.beginPath();
-                    sCtx.fillStyle = "red";
-                    sCtx.arc(point.x,point.y,10,0,2*Math.PI);
-                    sCtx.fill();
+                    // Sprite source: <a href='http://www.freepik.com/free-vector/red-ink-splashes_1050260.htm'>Designed by Freepik</a>
+                    
+                    let bloodSprite = new Sprite({
+                        context: sCtx,
+                        width: 150,
+                        height: 150,
+                        image: bloodImage,
+                        // Size Graph: https://www.wolframalpha.com/input/?i=sqrt(x%2F2)+x+from+0+to+1000
+                        scale: Math.sqrt(weapon.impact/2)/10,
+                        frames: 4
+                    });
+
+                    bloodSprite.draw(point.x,point.y);
 
                     hit = point;
                     self.destroy();
@@ -471,25 +487,42 @@ function Weapon(name) {
 
 // Simple sprite drawing function
 // Based on: http://www.williammalone.com/articles/create-html5-canvas-javascript-sprite-animation/
-function sprite(options) {
-    var self = [];
+function Sprite(options) {
+
+    var self = this;
+
     for(let i in options) {
-        self[i] = option[i];
+        self[i] = options[i];
     }
 
-    self.draw = function () {
+    self.draw = function (x,y) {
         let ctx = self.context;
-        ctx.drawImage(
-            self.image,
-            0,
-            0,
-            self.width,
-            self.height,
-            0,
-            0,
-            self.width,
-            self.height
-        );
+        ctx.save();
+        
+        ctx.globalCompositeOperation = "source-atop";
+        ctx.globalAlpha = 0.8;
+
+        if (bloodImage.complete) {
+
+            let imageIndex = Math.floor(Math.random() * self.frames);
+            let randRotation = Math.random() * Math.PI * 2;
+            ctx.translate(x,y);
+            ctx.rotate(randRotation);
+            ctx.drawImage(
+                self.image,
+                imageIndex * self.width,
+                0,
+                self.width,
+                self.height,
+
+                - (self.width * self.scale)/2,
+                - (self.height * self.scale)/2,
+                (self.width * self.scale),
+                (self.height * self.scale)
+            );
+        }
+
+        ctx.restore();
     };
 }
 
@@ -597,6 +630,7 @@ function init() {
     weaponNo["3"] = new Weapon("Shotgun");
     weaponNo["4"] = new Weapon("MP16");
     weaponNo["5"] = new Weapon("RPG");
+    weaponNo["0"] = new Weapon("Test");
 
     window.weapon = weaponNo["1"];
 
@@ -647,16 +681,6 @@ function init() {
 
     // Game Loop
     gameInterval = setInterval(gameLoop, 33);
-
-    // speedInterval = setInterval(function(){
-    //     player.speed *= 1.01;
-    //     for(let i in enemies) {
-    //         enemies[i].speed *= 1.2;
-    //         // Grow overtime? Not anymore
-    //         // enemies[i].size *= 1.1;
-    //     }
-    // },3000);
 }
 
 init();
-
