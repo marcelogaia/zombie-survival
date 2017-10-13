@@ -13,9 +13,9 @@ weaponsJSON = {"weapons": [{
 		"impact": 15,
 		"accuracy": 25,
 		"bulletPerShot": 1,
-		"shotSound": "shot.flac",
-		"reloadSound": "reload.wav",
-		"outOfAmmoSound": "outofammo.wav"
+		"shotSound": "sounds/shot.flac",
+		"reloadSound": "sounds/reload.wav",
+		"outOfAmmoSound": "sounds/outofammo.wav"
 	},
 	"Uzi": {
 		"name": "Uzi",
@@ -31,9 +31,9 @@ weaponsJSON = {"weapons": [{
 		"impact": 10,
 		"accuracy": 35,
 		"bulletPerShot": 1,
-		"shotSound": "shot.flac",
-		"reloadSound": "reload.wav",
-		"outOfAmmoSound": "outofammo.wav"
+		"shotSound": "sounds/shot.flac",
+		"reloadSound": "sounds/reload.wav",
+		"outOfAmmoSound": "sounds/outofammo.wav"
 	},
 	"Shotgun": {
 		"name": "Shotgun",
@@ -49,9 +49,9 @@ weaponsJSON = {"weapons": [{
 		"impact": 25,
 		"accuracy": 10,
 		"bulletPerShot": 12,
-		"shotSound": "shot.flac",
-		"reloadSound": "reload.wav",
-		"outOfAmmoSound": "outofammo.wav"
+		"shotSound": "sounds/shot.flac",
+		"reloadSound": "sounds/reload.wav",
+		"outOfAmmoSound": "sounds/outofammo.wav"
 	},
 	"MP16": {
 		"name": "MP16",
@@ -67,9 +67,9 @@ weaponsJSON = {"weapons": [{
 		"impact": 12,
 		"accuracy": 35,
 		"bulletPerShot": 1,
-		"shotSound": "shot.flac",
-		"reloadSound": "reload.wav",
-		"outOfAmmoSound": "outofammo.wav"
+		"shotSound": "sounds/shot.flac",
+		"reloadSound": "sounds/reload.wav",
+		"outOfAmmoSound": "sounds/outofammo.wav"
 	},
 	"RPG": {
 		"name": "Rocket Launcher",
@@ -85,9 +85,9 @@ weaponsJSON = {"weapons": [{
 		"impact": 100,
 		"accuracy": 90,
 		"bulletPerShot": 1,
-		"shotSound": "shot.flac",
-		"reloadSound": "reload.wav",
-		"outOfAmmoSound": "outofammo.wav"
+		"shotSound": "sounds/shot.flac",
+		"reloadSound": "sounds/reload.wav",
+		"outOfAmmoSound": "sounds/outofammo.wav"
 	},
 	"Test": {
 		"name": "TestWeapon",
@@ -103,8 +103,8 @@ weaponsJSON = {"weapons": [{
 		"impact": 3,
 		"accuracy": 150,
 		"bulletPerShot": 1,
-		"shotSound": "shot.flac",
-		"reloadSound": "reload.wav",
-		"outOfAmmoSound": "outofammo.wav"
+		"shotSound": "sounds/shot.flac",
+		"reloadSound": "sounds/reload.wav",
+		"outOfAmmoSound": "sounds/outofammo.wav"
 	}
 }]}

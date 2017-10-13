@@ -42,7 +42,7 @@ var gotHitSnd = [];
 
 // Sprite Maps
 var bloodImage = new Image();
-bloodImage.src = './blood_sprite.png';
+bloodImage.src = 'sprites/blood_sprite.png';
 
 // Canvas/Stage properties
 function Stage (bounds, tilemap) {
@@ -117,12 +117,12 @@ function Player () {
     gotHitSnd.push(new Audio());
     gotHitSnd.push(new Audio());
 
-    gotHitSnd[0].src = "gothit1.wav";
-    gotHitSnd[1].src = "gothit2.wav";
-    gotHitSnd[2].src = "gothit3.wav";
+    gotHitSnd[0].src = "sounds/gothit1.wav";
+    gotHitSnd[1].src = "sounds/gothit2.wav";
+    gotHitSnd[2].src = "sounds/gothit3.wav";
 
     playerDiedSnd = new Audio();
-    playerDiedSnd.src = "dead.wav";
+    playerDiedSnd.src = "sounds/dead.wav";
     
     self.draw = function() {
         self.move();
