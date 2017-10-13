@@ -2,8 +2,10 @@
 /*global window*/
 var sCanvas = document.getElementById("stage");
 var iCanvas = document.getElementById("interaction");
+var hCanvas = document.getElementById("hud");
 var sCtx = sCanvas.getContext("2d");
 var iCtx = iCanvas.getContext("2d");
+var hCtx = hCanvas.getContext("2d");
 
 // Keyboard control
 var keyPress = {
@@ -24,7 +26,7 @@ var mouse = {
 var weaponNo = [];
 
 // Game properties
-var score = 0;
+
 var level = 1;
 var gameInterval;
 var spawnInterval;
@@ -73,15 +75,27 @@ function Stage (bounds, tilemap) {
 
     self.draw = function() {
         // Draw background
-        var testGrad = sCtx.createLinearGradient(0,0,0,self.height);
-        testGrad.addColorStop("0","yellow");
-        testGrad.addColorStop("0.3","green");
-        testGrad.addColorStop("0.7","gray");
-        testGrad.addColorStop("1","black");
-        sCtx.fillStyle = testGrad;
-        sCtx.fillRect(0, 0, stage.width, stage.height);
+        tileSize = 50;
+        
+        let black = true;
+        let prevLine = black;
 
         // @TODO: Draw tilemap
+        for(let x = 0; x < sCanvas.width; x += tileSize) {
+            black = !prevLine;
+            for(let y = 0; y < sCanvas.height; y += tileSize) {
+
+                // Or even better 
+                
+                //sCtx.fillStyle = black ? "black" : "white";
+                // Not so hard in the eyes =P
+                sCtx.fillStyle = black ? "#222" : "#DDD";
+                sCtx.fillRect(x, y, x+tileSize, y+tileSize);
+                black = !black;
+            }
+            prevLine = black;
+            //black = !black;
+        }
     };
 
     self.resize();
@@ -96,6 +110,8 @@ function Player () {
     self.y = 0;
     self.speed = 2;
     self.direction = Math.PI/2;
+    self.level = 1;
+    self.exp = 0;
 
     gotHitSnd.push(new Audio());
     gotHitSnd.push(new Audio());
@@ -114,13 +130,47 @@ function Player () {
         // Drawing the player
         iCtx.beginPath();
         iCtx.fillStyle = "#EFE";
-        iCtx.fillRect(stage.xMid + self.x - 10, stage.yMid + self.y - 10, 20, 20);  
+        iCtx.strokeStyle = "black";
+        iCtx.lineWidth = 2;
+        iCtx.rect(stage.xMid + self.x - 10, stage.yMid + self.y - 10, 20, 20);  
+        iCtx.fill();
+        iCtx.stroke();
+        iCtx.lineWidth = 1;
+
+        self.drawHPBar();
+    };
+
+    self.earnXp = function(exp) {
+        if(self.exp + exp > self.nextLevel()) {
+            self.levelUp((self.exp + exp) - self.nextLevel());
+        } else {
+            self.exp += exp;
+        }
+    };
+
+    self.levelUp = function(remainingExp) {
+        self.level += 1;
+        self.earnXp(remainingExp);
+        console.log("Level up! " + (self.level-1) + ">" + self.level);
+        // @TODO: Level Up Animation
+        // @TODO: Apply upgrades to HP, Speed, weapon damage, based on level.
+        // self.applyUpgrades(self.level);
+    };
+
+    // Based on: G1 Pokemon 
+    // http://howtomakeanrpg.com/a/how-to-make-an-rpg-levels.html
+    self.nextLevel = function() {
+        return Math.round((4 * (Math.pow(self.level,3))) / 5);
+    };
+
+    self.drawHPBar = function() {
 
         // Drawing the HP bar
         iCtx.fillStyle = "red";
         iCtx.fillRect(stage.xMid + self.x - 15, stage.yMid + self.y - 20, 30, 3);
         iCtx.fillStyle = "green";
         iCtx.fillRect(stage.xMid + self.x - 15, stage.yMid + self.y - 20, self.hp/100*30, 3);
+
     };
 
     self.move = function() {
@@ -185,7 +235,7 @@ function Enemy (x,y,hp) {
     self.dmg = 10;
     self.hp = hp;
     self.currSpeed = 0;
-    self.score = 100;
+    self.exp =  2;
     self.size = 10;
 
     self.move = function() {
@@ -229,8 +279,24 @@ function Enemy (x,y,hp) {
         self.move();
         iCtx.beginPath();
         iCtx.fillStyle = "#D77";
-        iCtx.arc(stage.xMid + self.x, stage.yMid + self.y, self.size, 0, Math.PI*2);  
+        iCtx.strokeStyle = "black";
+        iCtx.lineWidth = 2;
+        iCtx.arc(stage.xMid + self.x, stage.yMid + self.y, self.size, 0, Math.PI*2);
         iCtx.fill();
+        iCtx.stroke();
+        iCtx.lineWidth = 1;
+
+        self.drawHPBar();
+    };
+
+    self.drawHPBar = function() {
+
+        // Drawing the HP bar
+        iCtx.fillStyle = "red";
+        iCtx.fillRect(stage.xMid + self.x - 10, stage.yMid + self.y - 15, 20, 3);
+        iCtx.fillStyle = "green";
+        iCtx.fillRect(stage.xMid + self.x - 10, stage.yMid + self.y - 15, self.hp/100*20, 3);
+
     };
 
     self.hitTest = function(obj) {
@@ -252,31 +318,49 @@ function Enemy (x,y,hp) {
             gotHitSnd[randSnd].currentTime = 0;
             gotHitSnd[randSnd].play();
         }
+
+        // @TODO: Draw damage received
     }; 
 
     self.spawn = function () {
-
+        // @TODO: Figure out why I wrote this.
     };
 
     self.die = function() {
         let index = enemies.indexOf(self);
         enemies.splice(index,1);
-        score += self.score;
+        player.earnXp(self.exp);
+        console.log("Player lvl: " + player.level);
+        console.log("Player exp: " + player.exp);
     };
 }
 
 function HUD() {
     var self = this;
-    self.draw = function() {
 
-        iCtx.font="20px Georgia";
-        iCtx.fillStyle = "white";
-        iCtx.fillText(score,10,20);
+    self.draw = function() {
+        
+    };
+
+    self.drawPlayerInfo = function() {
+
+    };
+
+    self.drawWeapons = function() {
+
+    };
+
+    self.drawExperienceBar = function() {
+
+    };
+
+    self.drawStatusMessage = function(message) {
+        // @TODO: Animation (text floating upwards and disapearing);
     };
 }
 
 // Bullet Instance
-function Bullet(x,y,range,direction, speed, impact) {
+function Bullet(x,y,range,direction, speed, impact, width) {
     var self = this;
     self.x = x;
     self.y = y;
@@ -285,6 +369,7 @@ function Bullet(x,y,range,direction, speed, impact) {
     self.speed = speed;
     self.dmg = weapon.dmg;
     self.impact = impact;
+    self.width = width;
 
     self.move = function() {
         self.x += Math.cos(self.direction) * self.speed;
@@ -301,6 +386,8 @@ function Bullet(x,y,range,direction, speed, impact) {
         iCtx.save();
         iCtx.translate(stage.xMid,stage.yMid);
         iCtx.strokeStyle = "#DDA";
+        iCtx.lineWidth = self.width;
+        console.log(self.width);
         iCtx.moveTo(self.x, self.y);
 
         let hit = self.hit();
@@ -318,6 +405,7 @@ function Bullet(x,y,range,direction, speed, impact) {
         iCtx.stroke();
         iCtx.restore();
 
+        // @TODO: Does it disapear if it leaves the screen? Potential mem leak.
         if(hit) self.destroy();
 
         self.move();
@@ -416,8 +504,7 @@ function Weapon(name) {
                 let direction = Math.atan2((y - stage.yMid - player.y),(x - stage.xMid - player.x));
                 let widthRange = 100/(self.accuracy*Math.PI*6);
                 direction += -widthRange/2 + Math.random()*widthRange;
-
-                bullets.push(new Bullet(player.x,player.y,self.range,direction,self.bulletSpeed,self.impact));
+                bullets.push(new Bullet(player.x,player.y,self.range,direction,self.bulletSpeed,self.impact,self.bulletWidth));
             }
             self.inMag -= 1;
 
@@ -464,20 +551,27 @@ function Weapon(name) {
     };
 
     self.draw = function() {
+
+        // @TODO: Change this whole thing to the HUD, not here.
         iCtx.font="14px Georgia";
         iCtx.fillStyle = "white";
         iCtx.textAlign = "center";
+        iCtx.lineWidth = 3;
+        iCtx.strokeText(weapon.name ,stage.xMid + player.x, stage.yMid + player.y + 25);
         iCtx.fillText(weapon.name ,stage.xMid + player.x, stage.yMid + player.y + 25);
 
         iCtx.textAlign = 'right';
+        iCtx.strokeText(self.inMag + "/" ,stage.xMid + player.x, stage.yMid + player.y + 45);
         iCtx.fillText(self.inMag + "/" ,stage.xMid + player.x, stage.yMid + player.y + 45);
         
         if(self.ammo == Infinity) {   
             iCtx.textAlign = 'left';
             iCtx.font="22px Georgia";
+            iCtx.strokeText("∞" ,stage.xMid + player.x, stage.yMid + player.y + 50);
             iCtx.fillText("∞" ,stage.xMid + player.x, stage.yMid + player.y + 50);
         } else {
             iCtx.textAlign = 'left';
+            iCtx.strokeText(self.ammo ,stage.xMid + player.x, stage.yMid + player.y + 45);
             iCtx.fillText(self.ammo ,stage.xMid + player.x, stage.yMid + player.y + 45);
         }
 
