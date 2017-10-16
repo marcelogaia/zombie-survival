@@ -1,0 +1,9 @@
+stagesJSON = {"stages": [{
+	"1-1": {
+		"name": "Stage 1",
+		"tileset" : "",
+		"enemyType" : ["bat","zombie","golem"],
+		"totalEnemies": 10,
+		"bondaries": true
+	}
+}]}

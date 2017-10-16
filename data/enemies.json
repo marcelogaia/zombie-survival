@@ -1,0 +1,32 @@
+enemiesJSON = {"enemies": [{
+	"zombie": {
+		"name": "Zombie",
+		"HP" : 140,
+		"maxSpeed" : 1.2,
+		"acceleration": 0.02,
+		"damage" : 10,
+		"experience" : 3,
+		"size" : 10,
+		"spritesheet" : ""
+	},
+	"bat": {
+		"name": "Bat",
+		"HP" : 40,
+		"maxSpeed" : 3,
+		"acceleration": 0.05,
+		"damage" : 5,
+		"experience" : 1,
+		"size" : 7,
+		"spritesheet" : ""
+	},
+	"golem": {
+		"name": "Golem",
+		"HP" : 400,
+		"maxSpeed" : 0.7,
+		"acceleration": 0.01,
+		"damage" : 40,
+		"experience" : 20,
+		"size" : 18,
+		"spritesheet" : ""
+	}
+}]}
