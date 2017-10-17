@@ -13,6 +13,8 @@ var sCtx = sCanvas.getContext("2d");
 var iCtx = iCanvas.getContext("2d");
 var hCtx = hCanvas.getContext("2d");
 
+var hud;
+
 // Settings
 var fillTheScreen = true;
 
@@ -54,6 +56,27 @@ var gotHitSnd = [];
 var bloodImage = new Image();
 bloodImage.src = 'sprites/blood_sprite.png';
 
+
+
+
+// FPS Counter
+// Code from: https://stackoverflow.com/a/5111475
+let filterStrength = 20;
+let frameTime = 0;
+let lastLoop = new Date(); 
+let thisLoop;
+
+// Report the fps only every second, to only lightly affect measurements
+setInterval(function(){
+    hud.drawStatusMessage(
+        stage.width - 40,
+        stage.height - 30,
+        Math.round(1000/frameTime) + " fps"
+    );
+},1000);
+
+
+
 class Game {
 
     static gameLoop() {
@@ -77,6 +100,15 @@ class Game {
         if(mouse.Click) {
             weapon.shoot(mouse.x,mouse.y);
         }
+
+
+
+        // FPS Counter
+        // Code from: https://stackoverflow.com/a/5111475
+        thisLoop = new Date();
+        let thisFrameTime = thisLoop - lastLoop;
+        frameTime += (thisFrameTime - frameTime) / filterStrength;
+        lastLoop = thisLoop;
     }
 
     static loadFiles(callback) {
@@ -103,33 +135,41 @@ class Game {
     }
     
     // Code from: https://stackoverflow.com/a/4634669
-    static insertScript(filesArr,callback = function(){}) {
-        let scriptCount = 0;
-        filesArr.forEach(function(fl){
-            var script = document.createElement("script");
-            script.type = "text/javascript";
+    static insertScript(filesArr,callback = function(){},index = 0) {
+        // @TODO: IMPORTANT: Wait until the last script was complete before trying to load next
+        let fl = filesArr[index];
+        let script = document.createElement("script");
+        script.type = "text/javascript";
 
-            if (script.readyState){  //IE
-                script.onreadystatechange = function(){
-                    if (script.readyState == "loaded" ||
-                            script.readyState == "complete"){
-                        script.onreadystatechange = null;
-                        scriptCount += 1;
-                        if(scriptCount == filesArr.length)
-                            callback();
-                    }
-                };
-            } else {  //Others
-                script.onload = function(){
-                    scriptCount += 1;
-                    if(scriptCount == filesArr.length)
+        sleep(50);
+
+        if (script.readyState){  // IE
+            script.onreadystatechange = function(){
+                if (script.readyState == "loaded" ||
+                        script.readyState == "complete"){
+                    
+                    script.onreadystatechange = null;
+
+                    index += 1;
+                    if(index == filesArr.length)
                         callback();
-                };
-            }
-
-            script.src = fl;
-            document.head.appendChild(script);
-        });
+                    else
+                        Game.insertScript(filesArr,callback,index);
+                
+                }
+            };
+        } else {  //Others
+            script.onload = function(){
+                index += 1;
+                if(index == filesArr.length)
+                    callback();
+                else
+                    Game.insertScript(filesArr,callback,index);
+            };
+        }
+        
+        script.src = fl;
+        document.head.appendChild(script);
     }
 
     // Creating the listeners for inputs
@@ -217,15 +257,15 @@ class Game {
         });
 
         window.player  = new Player(iCtx);
-        window.hud = new HUD();
+        window.hud = new HUD(hCtx);
         window.bullets = [];
 
-        weaponNo["1"] = new Weapon("Pistol");
-        weaponNo["2"] = new Weapon("Uzi");
-        weaponNo["3"] = new Weapon("Shotgun");
-        weaponNo["4"] = new Weapon("MP16");
-        weaponNo["5"] = new Weapon("RPG");
-        weaponNo["0"] = new Weapon("Test");
+        weaponNo["1"] = new Weapon("Pistol", player.x, player.y, iCtx);
+        weaponNo["2"] = new Weapon("Uzi", player.x, player.y, iCtx);
+        weaponNo["3"] = new Weapon("Shotgun", player.x, player.y, iCtx);
+        weaponNo["4"] = new Weapon("MP16", player.x, player.y, iCtx);
+        weaponNo["5"] = new Weapon("RPG", player.x, player.y, iCtx);
+        weaponNo["0"] = new Weapon("Test", player.x, player.y, iCtx);
 
         window.weapon = weaponNo["1"];
 
@@ -238,10 +278,22 @@ class Game {
         Game.addTheListeners(stage);
 
         // Game Loop
-        spawnInterval = setInterval(() => Enemy.spawn(stage), 300);
-        gameInterval = setInterval(Game.gameLoop, 33);
+        spawnInterval = setInterval(() => Enemy.spawn(stage), 100);
+        gameInterval = setInterval(Game.gameLoop,33);
     }
 }
 
+
 // Initializing the game
 Game.init();
+
+
+// @TODO: REMOVE THIS!
+function sleep(milliseconds) {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+        if ((new Date().getTime() - start) > milliseconds){
+            break;
+        }
+    }
+}

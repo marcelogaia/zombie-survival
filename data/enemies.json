@@ -2,9 +2,9 @@ enemiesJSON = {"enemies": [{
 	"zombie": {
 		"name": "Zombie",
 		"HP" : 140,
-		"maxSpeed" : 1.2,
+		"maxSpeed" : 0,
 		"acceleration": 0.02,
-		"damage" : 10,
+		"damage" : 0,
 		"experience" : 3,
 		"size" : 10,
 		"spritesheet" : ""
@@ -12,9 +12,9 @@ enemiesJSON = {"enemies": [{
 	"bat": {
 		"name": "Bat",
 		"HP" : 40,
-		"maxSpeed" : 3,
+		"maxSpeed" : 0,
 		"acceleration": 0.05,
-		"damage" : 5,
+		"damage" : 0,
 		"experience" : 1,
 		"size" : 7,
 		"spritesheet" : ""
@@ -22,11 +22,21 @@ enemiesJSON = {"enemies": [{
 	"golem": {
 		"name": "Golem",
 		"HP" : 400,
-		"maxSpeed" : 0.7,
-		"acceleration": 0.01,
-		"damage" : 40,
+		"maxSpeed" : 0,
+		"acceleration": 0.02,
+		"damage" : 0,
 		"experience" : 20,
 		"size" : 18,
+		"spritesheet" : ""
+	},
+	"boss": {
+		"name": "Boss",
+		"HP" : 10000,
+		"maxSpeed" : 0,
+		"acceleration": 0.03,
+		"damage" : 0,
+		"experience" : 200,
+		"size" : 70,
 		"spritesheet" : ""
 	}
 }]}

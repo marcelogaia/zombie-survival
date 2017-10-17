@@ -5,10 +5,12 @@ class Player extends GameObject {
         super(0,0,context);
 
         this.hp = 100;
-        this.speed = 2;
+        this.maxHp = 100;
+        this.speed = 4;
         this.direction = Math.PI/2;
         this.level = 1;
-        this.exp = 0;   
+        this.exp = 0;
+        this.size = 10;   
 
 
         // @TODO: Change location of this part
@@ -33,7 +35,7 @@ class Player extends GameObject {
         this.context.fillStyle = "#EFE";
         this.context.strokeStyle = "black";
         this.context.lineWidth = 2;
-        this.context.rect(stage.xMid + this.x - 10, stage.yMid + this.y - 10, 20, 20);
+        this.context.arc(stage.xMid + this.x, stage.yMid + this.y, this.size, 0, Math.PI*2);
         this.context.fill();
         this.context.stroke();
         this.context.lineWidth = 1;
@@ -51,8 +53,8 @@ class Player extends GameObject {
 
     levelUp(remainingExp) {
         this.level += 1;
-        this.earnXp(remainingExp);
         console.log("Level up! " + (this.level-1) + ">" + this.level);
+        this.earnXp(remainingExp);
 
         // @TODO: Level Up Animation
         // @TODO: Apply upgrades to HP, Speed, weapon damage, based on level.
@@ -70,7 +72,7 @@ class Player extends GameObject {
         this.context.fillStyle = "red";
         this.context.fillRect(stage.xMid + this.x - 15, stage.yMid + this.y - 20, 30, 3);
         this.context.fillStyle = "green";
-        this.context.fillRect(stage.xMid + this.x - 15, stage.yMid + this.y - 20, this.hp/100*30, 3);
+        this.context.fillRect(stage.xMid + this.x - 15, stage.yMid + this.y - 20, this.hp/this.maxHp*30, 3);
 
     }
 
@@ -108,8 +110,10 @@ class Player extends GameObject {
             this.x = this.x < -(stage.xMid) ? stage.xMid : this.x;
             this.y = this.y > (stage.yMid) ? -stage.yMid : this.y;
             this.y = this.y < -(stage.yMid) ? stage.yMid : this.y;
-
         }
+
+        weapon.x = this.x;
+        weapon.y = this.y;
     }
 
     die() {

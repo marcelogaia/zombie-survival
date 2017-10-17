@@ -3,6 +3,7 @@ class Bullet extends GameObject {
     constructor(x, y, context, range, direction, speed, impact, width) {
         super(x,y,context);
 
+        this.size = 1;
         this.range = range;
         this.direction = direction;
         this.speed = speed;
@@ -53,20 +54,31 @@ class Bullet extends GameObject {
     hit(){
         let hit = false;
 
+        // TODO: Decide if I want to draw here or in the Sprite class
         sCtx.save();
         sCtx.translate(stage.xMid,stage.yMid);
 
         eachPixel:
         for(let i = 0; i < this.speed; i++) {
-
-            let point = {
-                x: this.x + (Math.cos(this.direction) * i),
-                y: this.y + (Math.sin(this.direction) * i)
-            };
+            
 
             eachEnemies:
             for(let j in stage.enemies){
-                if(stage.enemies[j].wasHit(point)) {
+                
+                let point = {
+                    x: this.x+Math.cos(this.direction)*i,
+                    y: this.y+Math.sin(this.direction)*i
+                };
+                
+                let currEnemy = stage.enemies[j];
+
+                point = currEnemy.hitTest(point);
+
+                if(j > 0) {
+                    //console.log(point,stage.enemies.indexOf(currEnemy));
+                }
+
+                if(point) {
                     // Sprite source: <a href='http://www.freepik.com/free-vector/red-ink-splashes_1050260.htm'>Designed by Freepik</a>
 
                     let bloodSprite = new Sprite({
@@ -74,23 +86,25 @@ class Bullet extends GameObject {
                         width: 150,
                         height: 150,
                         image: bloodImage,
-                        // Size Graph: https://www.wolframalpha.com/input/?i=sqrt(x%2F2)+x+from+0+to+1000
-                        scale: Math.sqrt(weapon.impact/2)/10,
+                        // Size Graph: https://www.wolframalpha.com/input/?i=sqrt(x%2F200)+x+from+0+to+1000
+                        scale: Math.sqrt(this.dmg/300),
                         frames: 4
                     });
 
                     bloodSprite.drawRand(point.x,point.y);
 
                     hit = point;
-                    this.destroy();
 
-                    if(this.dmg < stage.enemies[j].currHP)
-                        stage.enemies[j].currHP -= this.dmg;
+                    if(this.dmg < currEnemy.currHP)
+                        currEnemy.currHP -= this.dmg;
                     else 
-                        stage.enemies[j].currHP = 0;
+                        currEnemy.currHP = 0;
 
-                    stage.enemies[j].x += (Math.cos(this.direction) * (this.impact*5 / stage.enemies[j].size));
-                    stage.enemies[j].y += (Math.sin(this.direction) * (this.impact*5 / stage.enemies[j].size));
+                    currEnemy.x += (Math.cos(this.direction) * (this.impact*5 / currEnemy.size));
+                    currEnemy.y += (Math.sin(this.direction) * (this.impact*5 / currEnemy.size));
+                    
+                    this.destroy();
+                    
                     break eachPixel;
                 }
             }

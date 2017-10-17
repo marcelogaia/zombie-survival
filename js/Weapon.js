@@ -1,7 +1,7 @@
 /* jslint browser:true, esversion: 6 */
-class Weapon {
-    constructor(name){
-
+class Weapon extends GameObject {
+    constructor(name,x,y,context){
+        super(x,y,context);
         // @TODO: Definitely a better way to implement this (load maybe?)
         for(let i in weaponsData[name]) {
             let w = weaponsData[name][i];
@@ -37,17 +37,17 @@ class Weapon {
             for(let i =0;i<this.bulletPerShot;i++){
 
                 let direction = Math.atan2(
-                    (y - stage.yMid - player.y),
-                    (x - stage.xMid - player.x));
+                    (y - stage.yMid - this.y),
+                    (x - stage.xMid - this.x));
 
                 // Implementing accuracy
                 let widthRange = 100/(this.accuracy*Math.PI*6);
                 direction += -widthRange/2 + Math.random()*widthRange;
                 
                 bullets.push( new Bullet(
-                    player.x,
-                    player.y,
-                    iCtx,
+                    this.x,
+                    this.y,
+                    this.context,
                     this.range,
                     direction,
                     this.bulletSpeed,
@@ -76,7 +76,7 @@ class Weapon {
             reloadSnd.play();
         } else {
             outOfAmmoSnd.play();
-            setTimeout(function(){weapon = new Weapon("Pistol");},500);
+            setTimeout(function(){weapon = weaponNo["1"];},500);
             return;
         }
 
@@ -103,26 +103,26 @@ class Weapon {
     draw() {
 
         // @TODO: Change this whole thing to the HUD, not here.
-        iCtx.font="14px Georgia";
-        iCtx.fillStyle = "white";
-        iCtx.textAlign = "center";
-        iCtx.lineWidth = 3;
-        iCtx.strokeText(weapon.name ,stage.xMid + player.x, stage.yMid + player.y + 25);
-        iCtx.fillText(weapon.name ,stage.xMid + player.x, stage.yMid + player.y + 25);
+        this.context.font="14px Georgia";
+        this.context.fillStyle = "white";
+        this.context.textAlign = "center";
+        this.context.lineWidth = 3;
+        this.context.strokeText(weapon.name ,stage.xMid + this.x, stage.yMid + this.y + 25);
+        this.context.fillText(weapon.name ,stage.xMid + this.x, stage.yMid + this.y + 25);
 
-        iCtx.textAlign = 'right';
-        iCtx.strokeText(this.inMag + "/" ,stage.xMid + player.x, stage.yMid + player.y + 45);
-        iCtx.fillText(this.inMag + "/" ,stage.xMid + player.x, stage.yMid + player.y + 45);
+        this.context.textAlign = 'right';
+        this.context.strokeText(this.inMag + "/" ,stage.xMid + this.x, stage.yMid + this.y + 45);
+        this.context.fillText(this.inMag + "/" ,stage.xMid + this.x, stage.yMid + this.y + 45);
 
         if(this.ammo == Infinity) {
-            iCtx.textAlign = 'left';
-            iCtx.font="22px Georgia";
-            iCtx.strokeText("∞" ,stage.xMid + player.x, stage.yMid + player.y + 50);
-            iCtx.fillText("∞" ,stage.xMid + player.x, stage.yMid + player.y + 50);
+            this.context.textAlign = 'left';
+            this.context.font="22px Georgia";
+            this.context.strokeText("∞" ,stage.xMid + this.x, stage.yMid + this.y + 50);
+            this.context.fillText("∞" ,stage.xMid + this.x, stage.yMid + this.y + 50);
         } else {
-            iCtx.textAlign = 'left';
-            iCtx.strokeText(this.ammo ,stage.xMid + player.x, stage.yMid + player.y + 45);
-            iCtx.fillText(this.ammo ,stage.xMid + player.x, stage.yMid + player.y + 45);
+            this.context.textAlign = 'left';
+            this.context.strokeText(this.ammo ,stage.xMid + this.x, stage.yMid + this.y + 45);
+            this.context.fillText(this.ammo ,stage.xMid + this.x, stage.yMid + this.y + 45);
         }
 
     }

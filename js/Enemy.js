@@ -58,28 +58,28 @@ class Enemy extends GameObject{
         // @TODO: Not sure this should be here
         this.move();
 
-        iCtx.beginPath();
-        iCtx.fillStyle = "#D77";
-        iCtx.strokeStyle = "black";
-        iCtx.lineWidth = 2;
-        iCtx.arc(stage.xMid + this.x, stage.yMid + this.y, this.size, 0, Math.PI*2);
-        iCtx.fill();
-        iCtx.stroke();
-        iCtx.lineWidth = 1;
+        this.context.beginPath();
+        this.context.fillStyle = "#D77";
+        this.context.strokeStyle = "black";
+        this.context.lineWidth = 2;
+        this.context.arc(stage.xMid + this.x, stage.yMid + this.y, this.size, 0, Math.PI*2);
+        this.context.fill();
+        this.context.stroke();
+        this.context.lineWidth = 1;
 
         this.drawHPBar();
     }
 
     drawHPBar() {
         // Drawing the HP bar
-        iCtx.fillStyle = "red";
-        iCtx.fillRect(
+        this.context.fillStyle = "red";
+        this.context.fillRect(
             stage.xMid + this.x - this.size, 
             stage.yMid + this.y - (this.size + 5), 
             this.size*2, 
             3);
-        iCtx.fillStyle = "green";
-        iCtx.fillRect(
+        this.context.fillStyle = "green";
+        this.context.fillRect(
             stage.xMid + this.x - this.size, 
             stage.yMid + this.y - (this.size + 5), 
             this.currHP/this.HP*this.size*2, 
@@ -87,12 +87,21 @@ class Enemy extends GameObject{
     }
 
     hitTest(obj) {
-        return !(Math.abs(obj.y - this.y)>20 || Math.abs(obj.x - this.x)>20);
-    }
+        // TODO: Fix the hardest function on the code.
+        if(obj && obj.size === undefined) obj.size = 0;
 
-    // Logic hack (Bad collision system);
-    wasHit(obj) {
-        return !(Math.abs(obj.y - this.y)>10 || Math.abs(obj.x - this.x)>10);
+        let yDist = Math.abs(obj.y - this.y);
+        let xDist = Math.abs(obj.x - this.x);
+        let actualDist = Math.sqrt(yDist*yDist + xDist*xDist);
+        
+        // if(obj.constructor.name === "Object"){
+        //     console.log(obj.constructor.name,actualDist,stage.enemies.indexOf(this));
+        // }
+
+        if(actualDist > this.size + obj.size)
+            return false;
+        
+        return obj;
     }
 
     hit() {
@@ -122,7 +131,8 @@ class Enemy extends GameObject{
                     stage.enemyType[randEnemy],
                     (Math.random()*stage.width) - stage.xMid,
                     (Math.random()*stage.height) - stage.yMid,
-                    stage
+                    stage,
+                    iCtx
                 )
             );
 
@@ -135,6 +145,8 @@ class Enemy extends GameObject{
             if(stage.enemies.length == 0) {
                 if(!counting) {
                     counting = true;
+
+                    // @TODO: Change to draw on HCTX
                     console.log(Stage.nextStageCountdown);
                     setTimeout(function(){
                         Stage.nextStageCountdown -= 1;
