@@ -1,10 +1,6 @@
 /* jslint browser:true, esversion: 6 */
 
 // @TODO: Figure out where all of these variables should be (Scope)
-
-// var sCanvas = document.getElementById("stage");
-// var iCanvas = document.getElementById("interaction");
-// var hCanvas = document.getElementById("hud");
 var sCanvas = document.createElement("canvas");
 var iCanvas = document.createElement("canvas");
 var hCanvas = document.createElement("canvas");
@@ -12,8 +8,6 @@ var hCanvas = document.createElement("canvas");
 var sCtx = sCanvas.getContext("2d");
 var iCtx = iCanvas.getContext("2d");
 var hCtx = hCanvas.getContext("2d");
-
-var hud;
 
 // Settings
 var fillTheScreen = true;
@@ -35,6 +29,7 @@ var mouse = {
 };
 
 var weaponNo = [];
+var hud;
 
 // Game properties
 
@@ -52,9 +47,6 @@ var outOfAmmoSnd;
 var playerDiedSnd;
 var gotHitSnd = [];
 
-// Sprite Maps
-var bloodImage = new Image();
-bloodImage.src = 'sprites/blood_sprite.png';
 
 
 
@@ -68,16 +60,31 @@ let thisLoop;
 
 // Report the fps only every second, to only lightly affect measurements
 setInterval(function(){
-    hud.drawStatusMessage(
-        stage.width - 40,
-        stage.height - 30,
-        Math.round(1000/frameTime) + " fps"
-    );
+    
 },1000);
 
-
+function sleep(milliseconds) {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+        if ((new Date().getTime() - start) > milliseconds){
+            break;
+        }
+    }
+}
 
 class Game {
+
+    constructor(){
+        this._isPaused = true;
+    }
+
+    static get isPaused() {
+        return this._isPaused;
+    }
+
+    static set isPaused(value) {
+        this._isPaused = value;
+    }
 
     static gameLoop() {
         iCtx.clearRect(0,0,stage.width,stage.height);
@@ -93,15 +100,9 @@ class Game {
             bullets[i].draw();
         }
 
-        if(player.speed > 10){
-            clearInterval(speedInterval);
-        }
-
         if(mouse.Click) {
             weapon.shoot(mouse.x,mouse.y);
         }
-
-
 
         // FPS Counter
         // Code from: https://stackoverflow.com/a/5111475
@@ -109,6 +110,12 @@ class Game {
         let thisFrameTime = thisLoop - lastLoop;
         frameTime += (thisFrameTime - frameTime) / filterStrength;
         lastLoop = thisLoop;
+
+        hud.drawStatusMessage(
+            stage.width - 40,
+            stage.height - 30,
+            Math.round(1000/frameTime) + " fps"
+        );
     }
 
     static loadFiles(callback) {
@@ -127,16 +134,45 @@ class Game {
             'js/Player.js',
             'js/Sprite.js',
             'js/Stage.js',
-            'js/Weapon.js'
+            'js/Weapon.js',
+            'js/StatusMessage.js'
         ];
+
+        let spriteFiles = {
+            defaultImage : {
+                src : 'sprites/default.png',
+                loaded : false
+            },
+            bloodImage : {
+                src : 'sprites/blood.png',
+                loaded : false
+            },
+            playerImage : {
+                src : 'sprites/player_handgun.png',
+                loaded : false
+            },
+
+        };
+
+        for(let img in spriteFiles){
+            window[img] = new Image();
+            window[img].src = spriteFiles[img].src;
+
+            window[img].onload = function(el){
+                spriteFiles[img].loaded = true;
+            };
+
+
+        }
 
         Game.insertScript(dataFiles);
         Game.insertScript(classFiles, callback);
+
     }
     
     // Code from: https://stackoverflow.com/a/4634669
     static insertScript(filesArr,callback = function(){},index = 0) {
-        // @TODO: IMPORTANT: Wait until the last script was complete before trying to load next
+        // Wait until the last script was complete before trying to load next
         let fl = filesArr[index];
         let script = document.createElement("script");
         script.type = "text/javascript";
@@ -214,6 +250,13 @@ class Game {
             if (evt.key === "ArrowDown" || evt.key.toLowerCase() === "s") {
                 keyPress.Down = false;
             }
+
+            if (evt.key === "Escape") {
+                if(Game.isPaused)
+                    Game.play();
+                else
+                    Game.pause();
+            }
         });
 
         document.addEventListener("mousedown", function(evt) {
@@ -237,13 +280,29 @@ class Game {
         document.body.append(iCanvas);
         document.body.append(hCanvas);
 
+        // Only run once all the json files are loaded
+        // @TODO: Also pre-load sprites and create a loading screen
         Game.loadFiles(Game.main);
     }
 
-    static main() {
-        // @TODO: Improve location of the code
+    static play() {
+        // Game Loop
+        spawnInterval = setInterval(stage.spawnEnemy.bind(stage), 400);
+        // 1000/30 = 33.333
+        gameInterval = setInterval(Game.gameLoop, 33);
+
+        Game.isPaused = false;
+    }
+
+    static pause() {
         clearInterval(gameInterval); // Static from Game
         clearInterval(spawnInterval); // Static from Stage
+
+        Game.isPaused = true;
+    }
+
+    static main() {
+        Game.pause();
 
         // @TODO: Definitely improve how I'm getting this
         window.weaponsData = weaponsJSON.weapons[0];
@@ -277,23 +336,10 @@ class Game {
         stage.draw();
         Game.addTheListeners(stage);
 
-        // Game Loop
-        spawnInterval = setInterval(() => Enemy.spawn(stage), 100);
-        gameInterval = setInterval(Game.gameLoop,33);
+        Game.play(window.stage);
     }
 }
 
 
 // Initializing the game
 Game.init();
-
-
-// @TODO: REMOVE THIS!
-function sleep(milliseconds) {
-    var start = new Date().getTime();
-    for (var i = 0; i < 1e7; i++) {
-        if ((new Date().getTime() - start) > milliseconds){
-            break;
-        }
-    }
-}

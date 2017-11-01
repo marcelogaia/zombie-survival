@@ -2,7 +2,7 @@
 
 class Player extends GameObject {
     constructor(context) {
-        super(0,0,context);
+        super(0,0,context,10);
 
         this.hp = 100;
         this.maxHp = 100;
@@ -10,7 +10,23 @@ class Player extends GameObject {
         this.direction = Math.PI/2;
         this.level = 1;
         this.exp = 0;
-        this.size = 10;   
+
+        let playerImg = new Image();
+        let sprite;
+        playerImg.src = "sprites/player_handgun.png";
+        playerImg.onload = function(){
+            sprite = new Sprite({
+                context : this.context,
+                width   : 50,
+                height  : 50,
+                image   : playerImage,
+                scale   : this.size,
+                frames  : 20,
+                animationSpeed : 7
+            });
+
+            this.sprite = sprite;
+        };
 
 
         // @TODO: Change location of this part
@@ -29,17 +45,7 @@ class Player extends GameObject {
 
     draw() {
         this.move();
-
-        // Drawing the player
-        this.context.beginPath();
-        this.context.fillStyle = "#EFE";
-        this.context.strokeStyle = "black";
-        this.context.lineWidth = 2;
-        this.context.arc(stage.xMid + this.x, stage.yMid + this.y, this.size, 0, Math.PI*2);
-        this.context.fill();
-        this.context.stroke();
-        this.context.lineWidth = 1;
-
+        super.draw();
         this.drawHPBar();
     }
 
@@ -49,11 +55,17 @@ class Player extends GameObject {
         } else {
             this.exp += exp;
         }
+
+
+        console.log("Player lvl: " + player.level);
+        console.log("Player exp: " + player.exp);
     }
 
     levelUp(remainingExp) {
         this.level += 1;
         console.log("Level up! " + (this.level-1) + ">" + this.level);
+        hud.message("Level up!");
+        this.exp = 0;
         this.earnXp(remainingExp);
 
         // @TODO: Level Up Animation
@@ -80,6 +92,7 @@ class Player extends GameObject {
         if(this.hp <= 0) {
             this.die();
         }
+
         let actualSpeed = this.speed;
 
         // Fair diagonal speed =)

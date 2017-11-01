@@ -3,7 +3,6 @@ class Bullet extends GameObject {
     constructor(x, y, context, range, direction, speed, impact, width) {
         super(x,y,context);
 
-        this.size = 1;
         this.range = range;
         this.direction = direction;
         this.speed = speed;
@@ -38,8 +37,8 @@ class Bullet extends GameObject {
         }
         else {
             this.context.lineTo(
-                this.x + (Math.cos(this.direction) * weapon.bulletSpeed),
-                this.y + (Math.sin(this.direction) * weapon.bulletSpeed)
+                this.x + (Math.cos(this.direction) * this.speed),
+                this.y + (Math.sin(this.direction) * this.speed)
             );
         }
 
@@ -53,10 +52,6 @@ class Bullet extends GameObject {
 
     hit(){
         let hit = false;
-
-        // TODO: Decide if I want to draw here or in the Sprite class
-        sCtx.save();
-        sCtx.translate(stage.xMid,stage.yMid);
 
         eachPixel:
         for(let i = 0; i < this.speed; i++) {
@@ -74,10 +69,6 @@ class Bullet extends GameObject {
 
                 point = currEnemy.hitTest(point);
 
-                if(j > 0) {
-                    //console.log(point,stage.enemies.indexOf(currEnemy));
-                }
-
                 if(point) {
                     // Sprite source: <a href='http://www.freepik.com/free-vector/red-ink-splashes_1050260.htm'>Designed by Freepik</a>
 
@@ -87,8 +78,9 @@ class Bullet extends GameObject {
                         height: 150,
                         image: bloodImage,
                         // Size Graph: https://www.wolframalpha.com/input/?i=sqrt(x%2F200)+x+from+0+to+1000
-                        scale: Math.sqrt(this.dmg/300),
-                        frames: 4
+                        scale: Math.sqrt(this.dmg)*3,
+                        frames: 4,
+                        animationSpeed: 0
                     });
 
                     bloodSprite.drawRand(point.x,point.y);
@@ -100,8 +92,8 @@ class Bullet extends GameObject {
                     else 
                         currEnemy.currHP = 0;
 
-                    currEnemy.x += (Math.cos(this.direction) * (this.impact*5 / currEnemy.size));
-                    currEnemy.y += (Math.sin(this.direction) * (this.impact*5 / currEnemy.size));
+                    currEnemy.x += (Math.cos(this.direction) * (this.impact * 5 / currEnemy.size));
+                    currEnemy.y += (Math.sin(this.direction) * (this.impact * 5 / currEnemy.size));
                     
                     this.destroy();
                     
@@ -109,8 +101,6 @@ class Bullet extends GameObject {
                 }
             }
         }
-
-        sCtx.restore();
 
         return hit;
     }
