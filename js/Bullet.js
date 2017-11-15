@@ -1,16 +1,14 @@
 /* jslint browser:true, esversion: 6 */
 class Bullet extends GameObject {
-    constructor(x, y, context, range, direction, speed, impact, width) {
-        super(x,y,context);
+    constructor(x, y, context, damage, direction, speed, impact, width) {
+        super(x,y,context,1,false);
 
-        this.range = range;
+        this.dmg = damage;
         this.direction = direction;
         this.speed = speed;
-        this.dmg = weapon.dmg;
         this.impact = impact;
         this.width = width;
     }
-    
 
     move(){
         this.x += Math.cos(this.direction) * this.speed;
@@ -84,6 +82,7 @@ class Bullet extends GameObject {
                     });
 
                     bloodSprite.drawRand(point.x,point.y);
+                    bloodSprite.destroy();
 
                     hit = point;
 

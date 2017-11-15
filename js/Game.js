@@ -11,6 +11,7 @@ var hCtx = hCanvas.getContext("2d");
 
 // Settings
 var fillTheScreen = true;
+var fps = 30;
 
 // Keyboard control
 var keyPress = {
@@ -74,18 +75,6 @@ function sleep(milliseconds) {
 
 class Game {
 
-    constructor(){
-        this._isPaused = true;
-    }
-
-    static get isPaused() {
-        return this._isPaused;
-    }
-
-    static set isPaused(value) {
-        this._isPaused = value;
-    }
-
     static gameLoop() {
         iCtx.clearRect(0,0,stage.width,stage.height);
         player.draw();
@@ -111,10 +100,11 @@ class Game {
         frameTime += (thisFrameTime - frameTime) / filterStrength;
         lastLoop = thisLoop;
 
-        hud.drawStatusMessage(
+        HUD.drawStatusMessage(
             stage.width - 40,
             stage.height - 30,
-            Math.round(1000/frameTime) + " fps"
+            Math.round(1000/frameTime) + " fps",
+            hCtx
         );
     }
 
@@ -231,7 +221,6 @@ class Game {
 
             // Weapon Choice
             if(evt.key.match("[0-9]")) {
-
                 if(weaponNo[evt.key] != undefined)
                     weapon = weaponNo[evt.key];
             }
@@ -281,15 +270,16 @@ class Game {
         document.body.append(hCanvas);
 
         // Only run once all the json files are loaded
-        // @TODO: Also pre-load sprites and create a loading screen
         Game.loadFiles(Game.main);
     }
 
     static play() {
+        clearInterval(gameInterval); // Static from Game
+        clearInterval(spawnInterval); // Static from Stage
+
         // Game Loop
-        spawnInterval = setInterval(stage.spawnEnemy.bind(stage), 400);
-        // 1000/30 = 33.333
-        gameInterval = setInterval(Game.gameLoop, 33);
+        spawnInterval = setInterval(stage.spawnEnemy.bind(stage), 1500);
+        gameInterval = setInterval(Game.gameLoop, 1000/fps);
 
         Game.isPaused = false;
     }
@@ -308,7 +298,7 @@ class Game {
         window.weaponsData = weaponsJSON.weapons[0];
         window.stagesData = stagesJSON.stages[0];
         window.enemiesData = enemiesJSON.enemies[0];
-
+        
         window.stage = new Stage("1-1",{
             stage : sCanvas,
             interaction : iCanvas,
@@ -319,27 +309,21 @@ class Game {
         window.hud = new HUD(hCtx);
         window.bullets = [];
 
+        // Mapping the weapons
         weaponNo["1"] = new Weapon("Pistol", player.x, player.y, iCtx);
-        weaponNo["2"] = new Weapon("Uzi", player.x, player.y, iCtx);
-        weaponNo["3"] = new Weapon("Shotgun", player.x, player.y, iCtx);
-        weaponNo["4"] = new Weapon("MP16", player.x, player.y, iCtx);
-        weaponNo["5"] = new Weapon("RPG", player.x, player.y, iCtx);
+        // weaponNo["2"] = new Weapon("Uzi", player.x, player.y, iCtx);
+        // weaponNo["3"] = new Weapon("Shotgun", player.x, player.y, iCtx);
+        // weaponNo["4"] = new Weapon("MP16", player.x, player.y, iCtx);
+        // weaponNo["5"] = new Weapon("RPG", player.x, player.y, iCtx);
         weaponNo["0"] = new Weapon("Test", player.x, player.y, iCtx);
 
         window.weapon = weaponNo["1"];
 
-        let stageCount = 1;
+        Game.addTheListeners();
 
-        stage.resize();
-
-        // Draw once;
-        stage.draw();
-        Game.addTheListeners(stage);
-
-        Game.play(window.stage);
+        Game.play();
     }
 }
-
 
 // Initializing the game
 Game.init();

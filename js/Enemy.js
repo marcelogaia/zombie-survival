@@ -13,6 +13,39 @@ class Enemy extends GameObject{
         this.pDirection = 0;
         this.currSpeed = 0;
         stage.toSpawn[name] -= stage.toSpawn[name] > 0 ? 1 : 0;
+
+
+        let self = this;
+
+        this.skills = {
+            "dash" : {
+                "castTime" : 2000,
+                "action" : function() {
+                    let prevAcc = self.acceleration;
+                    let prevMax = self.maxSpeed;
+                    self.acceleration = 5;
+                    self.maxSpeed = 40;
+
+                    setTimeout(function(){
+                        self.maxSpeed = prevMax;
+                        self.acceleration = prevAcc;
+                    },300);
+                },
+            }
+        };
+
+        // Based on: https://stackoverflow.com/a/6962808/4184867
+        (function loop() {
+            let skillNames = Object.keys(self.skills);
+
+            let skill = skillNames[Math.floor(Math.random() * skillNames.length)];
+            let rand = Math.round(Math.random() * 5000) + self.skills[skill].castTime;
+
+            setTimeout(function() {
+                self.useSkill(skill);
+                loop();  
+            }, rand);
+        }());
     }
 
     move() {
@@ -23,8 +56,15 @@ class Enemy extends GameObject{
         // If not touching the player, walk towards it.
         if(!this.hitTest(player) && player.hp > 0) {
             if(this.maxSpeed > this.currSpeed) {
-                this.currSpeed += 0.03;
+                this.currSpeed += this.acceleration;
+            } else {
+                for(let i = 0; this.maxSpeed < this.currSpeed && i < 100; i++) {
+                    this.currSpeed -= this.acceleration;
+                }
             }
+
+            // Easy fix
+            if(this.currSpeed < 0) this.currSpeed = 0;
 
             for(let i in stage.enemies){
                 let en = stage.enemies[i];
@@ -55,7 +95,7 @@ class Enemy extends GameObject{
         
         // @TODO: Not sure this should be here
         this.move();
-        super.draw();
+        super.draw(this.pDirection);
         this.drawHPBar();
     }
 
@@ -87,6 +127,12 @@ class Enemy extends GameObject{
             return false;
         
         return obj;
+    }
+
+    useSkill(skillName) {
+        let theSkill = this.skills[skillName];
+        // @TODO: Show the casting and casting bar.
+        setTimeout(theSkill.action, theSkill.castTime);
     }
 
     hit() {

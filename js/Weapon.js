@@ -45,10 +45,10 @@ class Weapon extends GameObject {
                 direction += -widthRange/2 + Math.random()*widthRange;
                 
                 bullets.push( new Bullet(
-                    this.x,
-                    this.y,
+                    this.x + (Math.cos(direction+(Math.PI*0.13))*18),
+                    this.y + (Math.sin(direction+(Math.PI*0.13))*18),
                     this.context,
-                    this.range,
+                    this.dmg,
                     direction,
                     this.bulletSpeed,
                     this.impact,

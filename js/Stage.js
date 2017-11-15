@@ -2,7 +2,7 @@
 
 class Stage {
     constructor(name, canvas) {
-        console.log(canvas);
+        let self = this;
         this.levelName = name;
         this.defaultSize = 0;
         this.width = 0;
@@ -12,6 +12,10 @@ class Stage {
         this.yMid = this.height / 2;
         this.canvas = canvas;
         this.currEnemies = {};
+        
+        this.shouldSpawn = true;
+        this.spawnCounting = false;
+        this.nextStageCountdown = 10;
 
         // @TODO: Remember what's this doing and comment explaining
         for(let i in stagesData[this.levelName]) {
@@ -28,27 +32,11 @@ class Stage {
         };
 
         this.resize();
-    }
+        this.draw();
 
-    static get shouldSpawn() {
-        return this._shouldSpawn;
-    }
-    static set shouldSpawn(value) {
-        this._shouldSpawn = value;
-    }
-
-    static get spawnCounting() {
-        return this._spawnCounting;
-    }
-    static set spawnCounting(value) {
-        this._spawnCounting = value;
-    }
-
-    static get nextStageCountdown() {
-        return this._nextStageCountdown;
-    }
-    static set nextStageCountdown(value) {
-        this._nextStageCountdown = value;
+        setTimeout(function(){
+            hud.message(self.name,"yellow",25);
+        },500);
     }
 
     resize() {
@@ -81,8 +69,7 @@ class Stage {
     }
 
     spawnEnemy() {
-        if(Stage.shouldSpawn){
-            console.log(Stage.shouldSpawn);
+        if(this.shouldSpawn){
             let nextEnemy = "";
             let enemies = [];
 
@@ -121,37 +108,25 @@ class Stage {
             }
 
             if(spawnedAll) {
-                Stage.shouldSpawn = false;
+                this.shouldSpawn = false;
             }
 
         } else {
-            if(this.enemies.length == 0 && !Stage.spawnCounting) {
-                Stage.nextStageCountdown -= 1;
+            if(this.enemies.length == 0 && !this.spawnCounting) {
                 
-                Stage.spawnCounting = true;
+                this.nextStageCountdown -= 1;
+                this.spawnCounting = true;
+                
+                if(this.nextStageCountdown > 0) hud.message(this.nextStageCountdown);
 
-                if(Stage.nextStageCountdown <= 0) {
-                    // Stage.shouldSpawn = true;
-                    Stage.nextStageCountdown = 10;
+                if(this.nextStageCountdown <= 0) {
+                    Stage.nextStage(this.canvas);
+                    return;
                 }
 
-                console.log(Stage.nextStageCountdown);
-
                 setTimeout(function(){
-                    Stage.spawnCounting = false;
-                },1000);
-
-            //     setTimeout(function(){
-            //         counting = false;
-            //         Stage.nextStageCountdown -= 1;
-
-            //         if(Stage.nextStageCountdown <= 0) {
-            //             Stage.shouldSpawn = true;
-            //             Stage.nextStageCountdown = 10;
-            //             //Stage.nextStage(this.canvas);
-            //         }
-                    
-            //     }.bind(this),1000);
+                    this.spawnCounting = false;
+                }.bind(this),700);
             }
         }
     }
@@ -166,26 +141,21 @@ class Stage {
         for(let x = 0; x < this.width; x += tileSize) {
             black = !prevLine;
             for(let y = 0; y < this.height; y += tileSize) {
-                this.context.stage.fillStyle = black ? "#222" : "#DDD";
+                if(y === 0) prevLine = black;
+                this.context.stage.fillStyle = black ? "#222" : "#555";
                 this.context.stage.fillRect(x, y, x+tileSize, y+tileSize);
                 black = !black;
             }
-            prevLine = black;
         }
     }
 
     static nextStage(canvas) {
         let stages = Object.getOwnPropertyNames(stagesData);
         let currStage = stages.indexOf(stage.levelName);
-        console.log(stage, stages, currStage);
-        window.stage = new Stage(stages[currStage+1],canvas);
-        console.log(stage, stages, currStage);
-        stage.draw();
+
+        if(currStage+1 < stages.length)
+            window.stage = new Stage(stages[currStage+1],canvas);
+        
+        Game.play();
     }
 }
-
-
-// Default values
-Stage.shouldSpawn = true;
-Stage.spawnCounting = false;
-Stage.nextStageCountdown = 10;
