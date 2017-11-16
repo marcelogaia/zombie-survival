@@ -246,18 +246,29 @@ class Game {
             }
         });
 
-        document.addEventListener("mousedown", function(evt) {
+        let mouseDown = function(evt) {
+            evt.preventDefault();
             mouse.Click = true;
-        });
-
-        document.addEventListener("mouseup", function(evt) {
+        };
+        let mouseUp = function(evt) {
+            evt.preventDefault();
             mouse.Click = false;
-        });
-
-        document.addEventListener("mousemove", function(evt){
+        };
+        let mouseMove = function(evt){
+            evt.preventDefault();
             mouse.x = evt.clientX;
             mouse.y = evt.clientY;
-        });
+        };
+
+        document.addEventListener("mousedown", mouseDown);
+        document.addEventListener("touchstart", mouseDown);
+
+        document.addEventListener("mouseup", mouseUp);
+        document.addEventListener("touchend", mouseUp);
+
+        document.addEventListener("mousemove", mouseMove);
+        document.addEventListener("touchmove", mouseMove);
+
     }
 
     static init() {
