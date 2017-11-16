@@ -15,36 +15,39 @@ class Enemy extends GameObject{
         stage.toSpawn[name] -= stage.toSpawn[name] > 0 ? 1 : 0;
 
 
-        let self = this;
 
-        this.skills = {
+        this.skillList = {
             "dash" : {
                 "castTime" : 2000,
-                "action" : function() {
-                    let prevAcc = self.acceleration;
-                    let prevMax = self.maxSpeed;
-                    self.acceleration = 5;
-                    self.maxSpeed = 40;
+                "action" : () => {
+                    let prevAcc = this.acceleration;
+                    let prevMax = this.maxSpeed;
+                    this.acceleration = 5;
+                    this.maxSpeed = 40;
 
                     setTimeout(function(){
-                        self.maxSpeed = prevMax;
-                        self.acceleration = prevAcc;
+                        this.maxSpeed = prevMax;
+                        this.acceleration = prevAcc;
                     },300);
                 },
             }
         };
 
+        let self = this;
+
         // Based on: https://stackoverflow.com/a/6962808/4184867
         (function loop() {
             let skillNames = Object.keys(self.skills);
 
-            let skill = skillNames[Math.floor(Math.random() * skillNames.length)];
-            let rand = Math.round(Math.random() * 5000) + self.skills[skill].castTime;
+            if(skillNames.length > 0) {
+                let skill = skillNames[Math.floor(Math.random() * skillNames.length)];
+                let rand = Math.round(Math.random() * 5000) + self.skillList[skill].castTime;
 
-            setTimeout(function() {
-                self.useSkill(skill);
-                loop();  
-            }, rand);
+                setTimeout(function() {
+                    self.useSkill(skill);
+                    loop();  
+                }, rand);
+            }
         }());
     }
 
@@ -136,7 +139,8 @@ class Enemy extends GameObject{
     }
 
     hit() {
-        if(player.hp > 0) {
+        if(player.hp > 0 && !player.invulnerable) {
+
             player.x += Math.cos(this.pDirection) * 15;
             player.y += Math.sin(this.pDirection) * 15;
 
@@ -146,6 +150,10 @@ class Enemy extends GameObject{
             let randSnd = Math.floor(Math.random() * 3);
             gotHitSnd[randSnd].currentTime = 0;
             gotHitSnd[randSnd].play();
+            player.invulnerable = true;
+            setTimeout(() => {
+                player.invulnerable = false;
+            },400);
         }
 
         // @TODO: Draw damage received

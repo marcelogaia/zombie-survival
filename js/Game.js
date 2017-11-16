@@ -151,8 +151,6 @@ class Game {
             window[img].onload = function(el){
                 spriteFiles[img].loaded = true;
             };
-
-
         }
 
         Game.insertScript(dataFiles);

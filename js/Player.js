@@ -6,11 +6,12 @@ class Player extends GameObject {
 
         this.hp = 100;
         this.maxHp = 100;
-        this.speed = 15;
+        this.speed = 4;
         this.direction = Math.PI/2;
         this.level = 1;
         this.exp = 0;
         this.baseDmg = 1;
+        this.invulnerable = false;
 
         window.playerImg = new Image();
         playerImg.src = "sprites/player_handgun.png";
@@ -43,12 +44,15 @@ class Player extends GameObject {
 
     draw() {
         this.move();
-        super.draw(this.direction);
+        if(this.invulnerable)
+            super.draw(this.direction,0.4);
+        else
+            super.draw(this.direction);
         this.drawHPBar();
     }
 
     earnXp(exp) {
-        if(this.exp + exp > this.nextLevel()) {
+        if(this.exp + exp >= this.nextLevel()) {
             this.levelUp((this.exp + exp) - this.nextLevel());
         } else {
             this.exp += exp;
@@ -100,7 +104,9 @@ class Player extends GameObject {
 
         // @TODO: Apply upgrades to HP, Speed, weapon damage, based on level.
         if(upgrades[level] !== null) setTimeout(upgrades[level],700);
-        this.maxHp *= 1.1 * (1 + level/4);
+        this.maxHp *= 1.12;
+        this.speed = 3 + Math.log(level);
+        console.log()
         this.hp = this.maxHp;
     }
 

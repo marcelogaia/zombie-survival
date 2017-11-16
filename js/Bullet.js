@@ -21,10 +21,11 @@ class Bullet extends GameObject {
     }
 
     draw(){
+        console.log(this.context);
         this.context.beginPath();
         this.context.save();
         this.context.translate(stage.xMid,stage.yMid);
-        this.context.strokeStyle = "#DDA";
+        this.context.strokeStyle = "#EB7";
         this.context.lineWidth = this.width;
         this.context.moveTo(this.x, this.y);
 

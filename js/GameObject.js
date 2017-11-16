@@ -22,7 +22,7 @@ class GameObject {
 		}
 	}
 
-	draw(rotation = 0) {
+	draw(rotation = 0, alpha = 1) {
 
 		var gradient = this.context.createRadialGradient(
 		    this.x+stage.xMid,
@@ -37,6 +37,6 @@ class GameObject {
 		this.context.fillStyle = gradient;
 		this.context.fillRect(0,0,stage.width,stage.height);
 
-		this.sprite.draw(this.x-this.size/2,this.y-this.size/2,this.context,rotation);
+		this.sprite.draw(this.x-this.size/2,this.y-this.size/2,this.context,rotation,alpha);
 	}
 }
