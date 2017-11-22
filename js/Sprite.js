@@ -11,13 +11,13 @@ class Sprite {
         this.currFrame = 0;
 
         if(this.animationSpeed > 0){
-            this.interval = setInterval(function(){
+            this.interval = setInterval(() => {
                 if(this.currFrame+1 >= this.frames) {
                     this.currFrame = 0;
                 } else {
                     this.currFrame += 1;
                 }
-            }.bind(this), 1000/this.animationSpeed);
+            }, 1000/this.animationSpeed);
         }
     }
 
@@ -32,10 +32,10 @@ class Sprite {
             context.drawImage(
                 this.image,                     // img      Specifies the image, canvas, or video element to use   
 
-                this.currFrame * this.width,    // sx       Optional. The x coordinate where to start clipping
+                this.currFrame * (this.image.width / this.frames),    // sx       Optional. The x coordinate where to start clipping
                 0,                              // sy       Optional. The y coordinate where to start clipping
 
-                this.width,                     // swidth   Optional. The width of the clipped image
+                (this.image.width / this.frames),                     // swidth   Optional. The width of the clipped image
                 this.height,                    // sheight  Optional. The height of the clipped image
 
                 -this.scale,                    // x        The x coordinate where to place the image on the canvas

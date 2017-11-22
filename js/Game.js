@@ -100,6 +100,13 @@ class Game {
         frameTime += (thisFrameTime - frameTime) / filterStrength;
         lastLoop = thisLoop;
 
+        if(1000/frameTime < 29 && hud.maxDrops > 300 ) {
+            hud.maxDrops-=5;
+        }
+        else if(hud.maxDrops < 800){
+            hud.maxDrops+=5;
+        }
+
         HUD.drawStatusMessage(
             stage.width - 40,
             stage.height - 30,
@@ -141,14 +148,49 @@ class Game {
                 src : 'sprites/player_handgun.png',
                 loaded : false
             },
-
         };
+
+        let soundFiles = {
+            rainSound : {
+                src : "sounds/rain.ogg",
+                loaded : false,
+                isBg : true,
+            },
+            caveTheme : {
+                src : "sounds/cave-theme.ogg",
+                loaded : false,
+                isBg : true
+            },
+            thunderSnd : {
+                src : "sounds/thunder.flac",
+                loaded : false,
+                isBg : false
+            },
+        };
+
+        console.log(soundFiles);
+
+        window.sounds = [];
+        for(let snd in soundFiles) {
+            console.log(snd);
+            window.sounds[snd] = new Audio();
+            window.sounds[snd].src = soundFiles[snd].src;
+            window.sounds[snd].isBg = soundFiles[snd].isBg;
+
+            window.sounds[snd].onload = () => {
+                soundFiles[snd].loaded = true;
+            };
+
+            window.sounds[snd].onended = () => {
+                window.sounds[snd].play();
+            };
+        }
 
         for(let img in spriteFiles){
             window[img] = new Image();
             window[img].src = spriteFiles[img].src;
 
-            window[img].onload = function(el){
+            window[img].onload = () =>{
                 spriteFiles[img].loaded = true;
             };
         }
@@ -156,6 +198,17 @@ class Game {
         Game.insertScript(dataFiles);
         Game.insertScript(classFiles, callback);
 
+    }
+
+    static playPauseMusic(pause = false) {
+        for(let i in window.sounds) {
+            let snd = window.sounds[i];
+
+            if(snd.isBg) {
+                if(pause) snd.pause();
+                else snd.play();
+            }
+        }
     }
     
     // Code from: https://stackoverflow.com/a/4634669
@@ -261,13 +314,13 @@ class Game {
         };
 
         document.addEventListener("mousedown", mouseDown);
-        document.addEventListener("touchstart", mouseDown);
+        // document.addEventListener("touchstart", mouseDown);
 
         document.addEventListener("mouseup", mouseUp);
-        document.addEventListener("touchend", mouseUp);
+        // document.addEventListener("touchend", mouseUp);
 
         document.addEventListener("mousemove", mouseMove);
-        document.addEventListener("touchmove", mouseMove);
+        // document.addEventListener("touchmove", mouseMove);
 
     }
 
@@ -287,9 +340,10 @@ class Game {
         clearInterval(spawnInterval); // Static from Stage
 
         // Game Loop
-        spawnInterval = setInterval(stage.spawnEnemy.bind(stage), 1500);
+        spawnInterval = setInterval(stage.spawnEnemy.bind(stage), 150);
         gameInterval = setInterval(Game.gameLoop, 1000/fps);
 
+        Game.playPauseMusic();
         Game.isPaused = false;
     }
 
@@ -297,6 +351,7 @@ class Game {
         clearInterval(gameInterval); // Static from Game
         clearInterval(spawnInterval); // Static from Stage
 
+        Game.playPauseMusic(true);
         Game.isPaused = true;
     }
 
@@ -308,23 +363,15 @@ class Game {
         window.stagesData = stagesJSON.stages[0];
         window.enemiesData = enemiesJSON.enemies[0];
         
-        window.stage = new Stage("1-1",{
-            stage : sCanvas,
-            interaction : iCanvas,
-            hud : hCanvas
-        });
+        window.stage = new Stage("1-1");
 
         window.player  = new Player(iCtx);
         window.hud = new HUD(hCtx);
         window.bullets = [];
 
         // Mapping the weapons
-        weaponNo["1"] = new Weapon("Pistol", player.x, player.y, iCtx);
-        // weaponNo["2"] = new Weapon("Uzi", player.x, player.y, iCtx);
-        // weaponNo["3"] = new Weapon("Shotgun", player.x, player.y, iCtx);
-        // weaponNo["4"] = new Weapon("MP16", player.x, player.y, iCtx);
-        // weaponNo["5"] = new Weapon("RPG", player.x, player.y, iCtx);
-        weaponNo["0"] = new Weapon("Test", player.x, player.y, iCtx);
+        weaponNo["1"] = new Weapon("Pistol");
+        weaponNo["0"] = new Weapon("Test");
 
         window.weapon = weaponNo["1"];
 

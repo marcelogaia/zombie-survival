@@ -6,7 +6,7 @@ class Player extends GameObject {
 
         this.hp = 100;
         this.maxHp = 100;
-        this.speed = 4;
+        this.speed = 3;
         this.direction = Math.PI/2;
         this.level = 1;
         this.exp = 0;
@@ -16,17 +16,17 @@ class Player extends GameObject {
         window.playerImg = new Image();
         playerImg.src = "sprites/player_handgun.png";
 
-        playerImg.onload = function(){
+        playerImg.onload = () => {
             this.sprite = new Sprite({
                 context : this.context,
-                width   : 258,
-                height  : 220,
+                width   : playerImg.width/20,
+                height  : playerImg.height/4,
                 image   : playerImage,
                 scale   : this.size,
                 frames  : 20,
                 animationSpeed : 20
             });
-        }.bind(this);
+        };
 
         // @TODO: Change location of this part
         gotHitSnd.push(new Audio());
@@ -77,36 +77,43 @@ class Player extends GameObject {
 
     applyUpgrades(level) {
         let upgrades = [
-            null, // 0
-            null, // 1
             function(){ // 2
-                window.weaponNo["2"] = new Weapon("Uzi", this.x, this.y, iCtx);
+                window.weaponNo["2"] = new Weapon("Uzi");
                 hud.message("New weapon: Uzi");
             },
-            null, // 3
+            function(){ // 3
+
+            },
             function() { // 4
-                window.weaponNo["3"] = new Weapon("Shotgun", this.x, this.y, iCtx);
+                window.weaponNo["3"] = new Weapon("Shotgun");
                 hud.message("New weapon: Shotgun");
             },
-            null, // 5
-            null, // 6
+            function(){ // 5
+
+            },
+            function(){ // 6
+
+            },
             function() { // 7
-                window.weaponNo["4"] = new Weapon("MP16", this.x, this.y, iCtx);
+                window.weaponNo["4"] = new Weapon("MP16");
                 hud.message("New weapon: MP16");
             },
-            null, // 8
-            null, // 9
+            function(){ // 8
+
+            },
+            function(){ // 9
+
+            },
             function() { // 10
-                window.weaponNo["5"] = new Weapon("RPG", this.x, this.y, iCtx);
+                window.weaponNo["5"] = new Weapon("RPG");
                 hud.message("New weapon: RPG");
             }
         ];
 
-        // @TODO: Apply upgrades to HP, Speed, weapon damage, based on level.
-        if(upgrades[level] !== null) setTimeout(upgrades[level],700);
+        setTimeout(upgrades[level-2],700);
         this.maxHp *= 1.12;
-        this.speed = 3 + Math.log(level);
-        console.log()
+        this.speed = 2.5 + Math.log(level);
+        console.log(this.speed);
         this.hp = this.maxHp;
     }
 

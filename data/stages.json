@@ -45,5 +45,12 @@ stagesJSON = {"stages": [{
 			"boss": 1
 		},
 		"bondaries": true
+	},
+	"1-6": {
+		"name": "Test Stage",
+		"tileset" : "",
+		"enemyType" : {
+		},
+		"bondaries": true
 	}
 }]}

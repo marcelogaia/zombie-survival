@@ -28,7 +28,7 @@ weaponsJSON = {"weapons": [{
 		"inMag": 50,
 		"shotDelay": 0.05,
 		"reloadTime": 2.0,
-		"dmg": 25,
+		"dmg": 20,
 		"AoE": 1,
 		"impact": 10,
 		"accuracy": 35,

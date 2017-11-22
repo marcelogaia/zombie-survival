@@ -1,7 +1,7 @@
 /* jslint browser:true, esversion: 6 */
 class Weapon extends GameObject {
-    constructor(name,x,y,context){
-        super(x,y,context);
+    constructor(name){
+        super(player.x,player.y,player.context);
         // @TODO: Definitely a better way to implement this (load maybe?)
         for(let i in weaponsData[name]) {
             let w = weaponsData[name][i];
@@ -22,6 +22,10 @@ class Weapon extends GameObject {
         gunshotSnd.src = this.shotSound;
         reloadSnd.src = this.reloadSound;
         outOfAmmoSnd.src = this.outOfAmmoSound;
+
+        gunshotSnd.volume = 0.1;
+        reloadSnd.volume = 0.3;
+        outOfAmmoSnd.volume = 0.5;
     }
 
     shoot(x,y) {
@@ -58,9 +62,7 @@ class Weapon extends GameObject {
 
             this.inMag -= 1;
 
-            setTimeout(function(){
-                this.isShooting = false;
-            }.bind(this),this.shotDelay*1000);
+            setTimeout(() => this.isShooting = false,this.shotDelay*1000);
 
             if(!gunshotSnd.paused) gunshotSnd.currentTime = 0;
 
@@ -84,8 +86,7 @@ class Weapon extends GameObject {
             // @TODO: Start reloading animation
             // @TODO: Cancel all reloads if changes weapons
             this.isReloading = true;
-            setTimeout(
-                function(){
+            setTimeout(() => {
                     if(this.ammo < (this.capacity - this.inMag)) {
                         this.inMag += this.ammo;
                         this.ammo = 0;
@@ -94,7 +95,7 @@ class Weapon extends GameObject {
                         this.inMag = this.capacity;
                     }
                     this.isReloading = false;
-                }.bind(this),
+                },
                 this.reloadTime * 1000
             );
         }

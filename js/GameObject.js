@@ -2,13 +2,13 @@
 
 // All intective objects in the Game.
 class GameObject {
-	constructor(x,y, context, size = 1, sprite = true){
+	constructor(x,y, context, size = 1, sprite = false){
 		this.x = x;
 		this.y = y;
 		this.context = context;
 		this.size = size;
 
-		if(sprite){
+		if(!sprite){
 			// Sprite tool: https://www.piskelapp.com/
 			this.sprite = new Sprite({
 				context : this.context,
@@ -37,6 +37,7 @@ class GameObject {
 		this.context.fillStyle = gradient;
 		this.context.fillRect(0,0,stage.width,stage.height);
 
-		this.sprite.draw(this.x-this.size/2,this.y-this.size/2,this.context,rotation,alpha);
+		if(typeof this.sprite === "object")
+			this.sprite.draw(this.x-this.size/2,this.y-this.size/2,this.context,rotation,alpha);
 	}
 }

@@ -34,9 +34,7 @@ class StatusMessage {
 		this.context.restore();
 
 		if(y > 0) {
-			setTimeout(function(){
-				this.draw(alpha-0.04,y - 1);
-			}.bind(this), 33);
+			setTimeout(() => this.draw(alpha-0.04,y - 1), 33);
 		}
 
 	}

@@ -2,7 +2,6 @@
 
 class Stage {
     constructor(name, canvas) {
-        let self = this;
         this.levelName = name;
         this.defaultSize = 0;
         this.width = 0;
@@ -26,23 +25,23 @@ class Stage {
         this.toSpawn = this.enemyType;
         
         this.context = {
-            stage : this.canvas.stage.getContext("2d"),
-            interaction : this.canvas.interaction.getContext("2d"),
-            hud : this.canvas.hud.getContext("2d")
+            stage : sCanvas.getContext("2d"),
+            interaction : iCanvas.getContext("2d"),
+            hud : hCanvas.getContext("2d")
         };
 
         this.resize();
         this.draw();
 
-        setTimeout(function(){
-            hud.message(self.name,"yellow",25);
+        setTimeout(() => {
+            hud.message(this.name,"yellow",25);
         },500);
     }
 
     resize() {
         if(fillTheScreen) {
-            this.width = document.body.clientWidth - 10;
-            this.height = document.body.clientHeight - 10;
+            this.width = document.body.clientWidth/* - 10*/;
+            this.height = document.body.clientHeight/* - 10*/;
             this.xMid = this.width / 2;
             this.yMid = this.height / 2;
         } else {
@@ -52,24 +51,37 @@ class Stage {
                 this.defaultSize = document.body.clientHeight;
             }
 
-            this.width = this.defaultSize - 10;
-            this.height = this.defaultSize - 10;
+            this.width = this.defaultSize/* - 10*/;
+            this.height = this.defaultSize/* - 10*/;
         }
 
         this.xMid = this.width / 2;
         this.yMid = this.height / 2;
-        this.canvas.stage.width = this.width;
-        this.canvas.stage.height = this.height;
-        this.canvas.interaction.width = this.width;
-        this.canvas.interaction.height = this.height;
-        this.canvas.hud.width = this.width;
-        this.canvas.hud.height = this.height;
+        sCanvas.width = this.width;
+        sCanvas.height = this.height;
+        iCanvas.width = this.width;
+        iCanvas.height = this.height;
+        hCanvas.width = this.width;
+        hCanvas.height = this.height;
 
+        if(hud !== undefined)hud.draw();
         this.draw();
     }
 
     spawnEnemy() {
         if(this.shouldSpawn){
+
+            let spawnedAll = true;
+
+            for (var enemy in this.toSpawn) {
+                if(this.toSpawn[enemy] > 0) spawnedAll = false;
+            }
+
+            if(spawnedAll) {
+                this.shouldSpawn = false;
+                return;
+            }
+
             let nextEnemy = "";
             let enemies = [];
 
@@ -89,27 +101,29 @@ class Stage {
                     nextEnemy = enemies[i].name;
                 }
             }
+
+            let point = {x:0,y:0};
+            let actualDist = 0;
+
+            while(actualDist < 500) {
+                point.x = (Math.random()*this.width) - this.xMid;
+                point.y = (Math.random()*this.height) - this.yMid;
+
+                let yDist = Math.abs(player.y - point.y);
+                let xDist = Math.abs(player.x - point.x);
+                actualDist = Math.sqrt(yDist*yDist + xDist*xDist);
+            }
             
             this.enemies.push(
                 new Enemy(
                     nextEnemy,
                     // @TODO: Change that so I can set an spawn area
-                    (Math.random()*this.width) - this.xMid,
-                    (Math.random()*this.height) - this.yMid,
+                    point.x,
+                    point.y,
                     iCtx,
                     this
                 )
             );
-
-            let spawnedAll = true;
-
-            for (var enemy in this.toSpawn) {
-                if(this.toSpawn[enemy] > 0) spawnedAll = false;
-            }
-
-            if(spawnedAll) {
-                this.shouldSpawn = false;
-            }
 
         } else {
             if(this.enemies.length == 0 && !this.spawnCounting) {
@@ -120,13 +134,11 @@ class Stage {
                 if(this.nextStageCountdown > 0) hud.message(this.nextStageCountdown);
 
                 if(this.nextStageCountdown <= 0) {
-                    Stage.nextStage(this.canvas);
+                    Stage.nextStage();
                     return;
                 }
 
-                setTimeout(function(){
-                    this.spawnCounting = false;
-                }.bind(this),700);
+                setTimeout(() => this.spawnCounting = false,700);
             }
         }
     }
@@ -149,12 +161,12 @@ class Stage {
         }
     }
 
-    static nextStage(canvas) {
+    static nextStage() {
         let stages = Object.getOwnPropertyNames(stagesData);
         let currStage = stages.indexOf(stage.levelName);
 
         if(currStage+1 < stages.length)
-            window.stage = new Stage(stages[currStage+1],canvas);
+            window.stage = new Stage(stages[currStage+1],window.hCanvas);
         
         Game.play();
     }

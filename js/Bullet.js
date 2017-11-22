@@ -21,7 +21,6 @@ class Bullet extends GameObject {
     }
 
     draw(){
-        console.log(this.context);
         this.context.beginPath();
         this.context.save();
         this.context.translate(stage.xMid,stage.yMid);
