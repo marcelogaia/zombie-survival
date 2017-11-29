@@ -57,12 +57,15 @@ class Stage {
 
         this.xMid = this.width / 2;
         this.yMid = this.height / 2;
-        sCanvas.width = this.width;
-        sCanvas.height = this.height;
-        iCanvas.width = this.width;
-        iCanvas.height = this.height;
-        hCanvas.width = this.width;
-        hCanvas.height = this.height;
+
+        let allCanvas = document.querySelectorAll("canvas");
+
+        for(let i = 0; i < allCanvas.length; i++) {
+            let c = allCanvas[i];
+            // console.log(c,this);
+            c.width = this.width;
+            c.height = this.height;
+        }
 
         if(hud !== undefined)hud.draw();
         this.draw();

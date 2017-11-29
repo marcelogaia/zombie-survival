@@ -37,8 +37,11 @@ class Player extends GameObject {
         gotHitSnd[1].src = "sounds/gothit2.wav";
         gotHitSnd[2].src = "sounds/gothit3.wav";
 
+        for(let i in gotHitSnd) gotHitSnd[i].volume = 0.2;
+
         playerDiedSnd = new Audio();
         playerDiedSnd.src = "sounds/dead.wav";
+        playerDiedSnd.volume = 0.4;
     }
 
 
@@ -172,12 +175,12 @@ class Player extends GameObject {
     die() {
         this.speed = 0;
 
-        // @TODO: Solve this better;
-        clearInterval(gameInterval);
-        clearInterval(spawnInterval);
+        Game.pause();
 
         playerDiedSnd.currentTime = 0;
+        playerDiedSnd.volume = 0.3;
         playerDiedSnd.play();
 
+        // @TODO: Respawn
     }
 }

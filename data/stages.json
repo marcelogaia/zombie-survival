@@ -22,9 +22,9 @@ stagesJSON = {"stages": [{
 		"name": "Underworld 3",
 		"tileset" : "",
 		"enemyType" : {
-			"bat"	 : 10,
-			"zombie" : 30,
-			"golem"  : 10
+			"bat"	 : 15,
+			"zombie" : 20,
+			"golem"  : 8
 		},
 		"bondaries": true
 	},
@@ -32,8 +32,8 @@ stagesJSON = {"stages": [{
 		"name": "Underworld 4",
 		"tileset" : "",
 		"enemyType" : {
-			"bat"	 : 30,
-			"zombie" : 60,
+			"bat"	 : 10,
+			"zombie" : 30,
 			"golem"  : 15
 		},
 		"bondaries": true

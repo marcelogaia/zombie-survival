@@ -28,8 +28,8 @@ enemiesJSON = {"enemies": [{
 		"acceleration": 0.02,
 		"damage" : 25,
 		"experience" : 20,
-		"size" : 18,
-		"spritesheet" : "",
+		"size" : 35,
+		"spritesheet" : ["golem.png",16],
 		"skills" : []
 	},
 	"boss": {

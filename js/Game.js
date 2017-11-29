@@ -3,10 +3,12 @@
 // @TODO: Figure out where all of these variables should be (Scope)
 var sCanvas = document.createElement("canvas");
 var iCanvas = document.createElement("canvas");
+var eCanvas = document.createElement("canvas");
 var hCanvas = document.createElement("canvas");
 
 var sCtx = sCanvas.getContext("2d");
 var iCtx = iCanvas.getContext("2d");
+var eCtx = eCanvas.getContext("2d");
 var hCtx = hCanvas.getContext("2d");
 
 // Settings
@@ -78,6 +80,7 @@ class Game {
     static gameLoop() {
         iCtx.clearRect(0,0,stage.width,stage.height);
         player.draw();
+        env.draw();
         hud.draw();
         weapon.draw();
 
@@ -100,11 +103,11 @@ class Game {
         frameTime += (thisFrameTime - frameTime) / filterStrength;
         lastLoop = thisLoop;
 
-        if(1000/frameTime < 29 && hud.maxDrops > 300 ) {
-            hud.maxDrops-=5;
+        if(1000/frameTime < 29 && hud.maxDrops > 200 ) {
+            hud.maxDrops-=2;
         }
-        else if(hud.maxDrops < 800){
-            hud.maxDrops+=5;
+        else if(hud.maxDrops < 400){
+            hud.maxDrops+=2;
         }
 
         HUD.drawStatusMessage(
@@ -127,6 +130,7 @@ class Game {
             'js/GameObject.js',
             'js/Bullet.js',
             'js/Enemy.js',
+            'js/Environment.js',
             'js/HUD.js',
             'js/Player.js',
             'js/Sprite.js',
@@ -168,21 +172,21 @@ class Game {
             },
         };
 
-        console.log(soundFiles);
-
         window.sounds = [];
         for(let snd in soundFiles) {
-            console.log(snd);
             window.sounds[snd] = new Audio();
             window.sounds[snd].src = soundFiles[snd].src;
             window.sounds[snd].isBg = soundFiles[snd].isBg;
+            window.sounds[snd].mozPreservesPitch = false;
+
 
             window.sounds[snd].onload = () => {
                 soundFiles[snd].loaded = true;
             };
 
             window.sounds[snd].onended = () => {
-                window.sounds[snd].play();
+                if(window.sounds[snd].isBg)
+                    window.sounds[snd].play();
             };
         }
 
@@ -203,11 +207,9 @@ class Game {
     static playPauseMusic(pause = false) {
         for(let i in window.sounds) {
             let snd = window.sounds[i];
-
-            if(snd.isBg) {
-                if(pause) snd.pause();
-                else snd.play();
-            }
+        
+            if(pause) snd.pause();
+            else if(snd.isBg) snd.play();
         }
     }
     
@@ -329,6 +331,7 @@ class Game {
         // Create the Canvas elements
         document.body.append(sCanvas);
         document.body.append(iCanvas);
+        document.body.append(eCanvas);
         document.body.append(hCanvas);
 
         // Only run once all the json files are loaded
@@ -338,6 +341,10 @@ class Game {
     static play() {
         clearInterval(gameInterval); // Static from Game
         clearInterval(spawnInterval); // Static from Stage
+
+        setTimeout(()=>{
+            env.thunder();
+        },Math.random() * 5000 + 1000);
 
         // Game Loop
         spawnInterval = setInterval(stage.spawnEnemy.bind(stage), 150);
@@ -350,15 +357,15 @@ class Game {
     static pause() {
         clearInterval(gameInterval); // Static from Game
         clearInterval(spawnInterval); // Static from Stage
+        clearInterval(env.thunderInterval); // Static from Stage
+        clearTimeout(env.nextThunderTO);
 
         Game.playPauseMusic(true);
         Game.isPaused = true;
     }
 
     static main() {
-        Game.pause();
-
-        // @TODO: Definitely improve how I'm getting this
+        
         window.weaponsData = weaponsJSON.weapons[0];
         window.stagesData = stagesJSON.stages[0];
         window.enemiesData = enemiesJSON.enemies[0];
@@ -366,6 +373,7 @@ class Game {
         window.stage = new Stage("1-1");
 
         window.player  = new Player(iCtx);
+        window.env = new Environment(eCtx);
         window.hud = new HUD(hCtx);
         window.bullets = [];
 

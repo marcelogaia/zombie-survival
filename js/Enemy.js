@@ -16,6 +16,7 @@ class Enemy extends GameObject{
         
         if(sprite) {
 
+            // @TODO: Check if image was found.
             let img = new Image();
             img.src = "sprites/" + this.spritesheet[0];
 
@@ -48,8 +49,8 @@ class Enemy extends GameObject{
                 "action" : () => {
                     let prevAcc = this.acceleration;
                     let prevMax = this.maxSpeed;
-                    this.acceleration = 5;
-                    this.maxSpeed = 15;
+                    this.acceleration = 0.45;
+                    this.maxSpeed = 11;
                     this.directionLock = true;
 
                     setTimeout(() => {

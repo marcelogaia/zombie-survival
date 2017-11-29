@@ -24,7 +24,7 @@ class Weapon extends GameObject {
         outOfAmmoSnd.src = this.outOfAmmoSound;
 
         gunshotSnd.volume = 0.1;
-        reloadSnd.volume = 0.3;
+        reloadSnd.volume = 0.2;
         outOfAmmoSnd.volume = 0.5;
     }
 
