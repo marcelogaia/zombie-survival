@@ -32,9 +32,9 @@ stagesJSON = {"stages": [{
 		"name": "Underworld 4",
 		"tileset" : "",
 		"enemyType" : {
-			"bat"	 : 10,
-			"zombie" : 30,
-			"golem"  : 15
+			"bat"	 : 5,
+			"zombie" : 20,
+			"golem"  : 20
 		},
 		"bondaries": true
 	},

@@ -115,6 +115,7 @@ class Player extends GameObject {
 
         setTimeout(upgrades[level-2],700);
         this.maxHp *= 1.12;
+        this.maxHp = parseInt(this.maxHp);
         this.speed = 2.5 + Math.log(level);
         console.log(this.speed);
         this.hp = this.maxHp;

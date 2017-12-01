@@ -10,18 +10,19 @@ class Environment {
         this.nextThunderTO = 0;
 
         sounds.thunderSnd.volume = 0.3; 
+
+        this.thunderCount = 0;
 	}
 
-    thunder(baseSpeed = 1) {
-        console.log("played");
+    thunder() {
+        console.log(this.thunderCount++);
         this.shadowAlpha = 1;
 
     	let dim = false;
         sounds.thunderSnd.currentTime = 0;
         sounds.thunderSnd.playbackRate = 0.6 + Math.random() * 0.8;
-        console.log(sounds.thunderSnd.playbackRate);
 
-        setTimeout(()=>{sounds.thunderSnd.play();},600);
+        sounds.thunderSnd.play();
 
         this.thunderInterval = setInterval(() => {
             this.context.fillStyle = "rgba(200,150,255,0.2)";
@@ -33,19 +34,19 @@ class Environment {
                 dim = true;
 
                 if(this.shadowAlpha < 1) {
+                    // x = 2 * (x + 0.015)
                     this.shadowAlpha += 0.015;
                     this.shadowAlpha *= 2;
+                    clearTimeout(this.nextThunderTO);
                 } else {
-                    dim = false;
                     clearInterval(this.thunderInterval);
+                    dim = false;
                     this.shadowAlpha = 1;
 
                     let time = Math.random() * 10000 + 3000;
                     
                     this.nextThunderTO = setTimeout(()=>{
-                        console.log(this);
                         this.thunder();
-                        clearTimeout(this.nextThunderTO);
                     },time);
                 }
             }

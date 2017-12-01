@@ -56,7 +56,7 @@ weaponsJSON = {"weapons": [{
 		"reloadSound": "sounds/reload.wav",
 		"outOfAmmoSound": "sounds/outofammo.wav"
 	},
-	"MP16": {
+	"AK-47": {
 		"name": "MP16",
 		"range": 150,
 		"bulletSpeed": 120,

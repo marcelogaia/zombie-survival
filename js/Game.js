@@ -51,9 +51,6 @@ var playerDiedSnd;
 var gotHitSnd = [];
 
 
-
-
-
 // FPS Counter
 // Code from: https://stackoverflow.com/a/5111475
 let filterStrength = 20;
@@ -151,6 +148,30 @@ class Game {
             playerImage : {
                 src : 'sprites/player_handgun.png',
                 loaded : false
+            },
+            pistolImage : {
+                src : 'sprites/weapon_pistol.png',
+                loaded: false
+            },
+            uziImage : {
+                src : 'sprites/weapon_uzi.png',
+                loaded: false
+            },
+            shotgunImage : {
+                src : 'sprites/weapon_shotgun.png',
+                loaded: false
+            },
+            ak47Image : {
+                src : 'sprites/weapon_ak47.png',
+                loaded: false
+            },
+            rpgImage : {
+                src : 'sprites/weapon_rpg.png',
+                loaded: false
+            },
+            portraitImage : {
+                src : 'sprites/portrait.png',
+                loaded: false
             },
         };
 
