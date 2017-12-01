@@ -363,7 +363,7 @@ class Game {
         clearInterval(gameInterval); // Static from Game
         clearInterval(spawnInterval); // Static from Stage
 
-        setTimeout(()=>{
+        window.tto = setTimeout(()=>{
             env.thunder();
         },Math.random() * 5000 + 1000);
 
@@ -380,6 +380,7 @@ class Game {
         clearInterval(spawnInterval); // Static from Stage
         clearInterval(env.thunderInterval); // Static from Stage
         clearTimeout(env.nextThunderTO);
+        clearTimeout(window.tto);
 
         Game.playPauseMusic(true);
         Game.isPaused = true;

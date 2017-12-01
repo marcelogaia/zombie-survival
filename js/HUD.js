@@ -30,11 +30,11 @@ class HUD {
 
         let ratio = player.hp / player.maxHp;
         ctx.beginPath();
-        ctx.fillStyle = "rgb(200,0,0)";
+        ctx.fillStyle = "rgb(160,0,0)";
         ctx.lineWidth = 1;
         ctx.moveTo(80,65);
-        ctx.lineTo(370*ratio,65);
-        ctx.lineTo(360*ratio,75);
+        ctx.lineTo(290*ratio + 80,65);
+        ctx.lineTo(280*ratio + 80,75);
         ctx.lineTo(90,75);
         ctx.closePath();
         ctx.fill();
@@ -56,9 +56,9 @@ class HUD {
 
         ctx.font = "11px Arial";
         ctx.strokeStyle = "black";
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "rgba(255,240,240,1)";
         ctx.textAlign = "center";
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 4;
         ctx.strokeText(player.hp + "  / " + player.maxHp,225,73);
         ctx.fillText(player.hp + "  / " + player.maxHp,225,73);
 

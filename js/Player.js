@@ -85,6 +85,8 @@ class Player extends GameObject {
                 hud.message("New weapon: Uzi");
             },
             function(){ // 3
+                window.weaponNo["1"].dmg *= 2;
+                hud.message("Pistol - Double Damage");  
 
             },
             function() { // 4
@@ -92,19 +94,26 @@ class Player extends GameObject {
                 hud.message("New weapon: Shotgun");
             },
             function(){ // 5
-
+                window.weaponNo["2"].ammo = 300;
+                window.weaponNo["2"].inMag = 50;
+                hud.message("Uzi - Increased Capacity");
             },
             function(){ // 6
-
+                window.weaponNo["3"].dmg *= 3;
+                hud.message("Shotgun - Triple Damage");
             },
             function() { // 7
                 window.weaponNo["4"] = new Weapon("MP16");
                 hud.message("New weapon: MP16");
             },
             function(){ // 8
-
+                window.weaponNo["3"].ammo = 45;
+                window.weaponNo["3"].inMag = 6;
+                hud.message("Shotgun - Increased Capacity");
             },
             function(){ // 9
+                window.weaponNo["2"].dmg *= 2;
+                hud.message("Uzi - Double Damage");
 
             },
             function() { // 10
